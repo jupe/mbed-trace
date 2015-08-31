@@ -18,6 +18,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#define YOTTA_CFG_MBED_CLIENT_TRACE
 #include "mbed-client-trace/mbed_client_trace.h"
 #include "ip6string.h"
 #include "common_functions.h"
@@ -121,7 +122,7 @@ int mbed_client_trace_init(void)
             m_trace.filters_exclude == NULL  ||
             m_trace.filters_include == NULL) {
         //memory allocation fail
-        trace_free();
+        mbed_client_trace_free();
         return -1;
     }
     memset(m_trace.tmp_data, 0, m_trace.tmp_data_length);
@@ -233,7 +234,7 @@ static void mbed_client_trace_default_print(const char *str)
 void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
 {
     m_trace.line[0] = 0; //by default trace is empty
-    if (trace_skip(dlevel, grp) || fmt == 0 || grp == 0) {
+    if (mbed_client_trace_skip(dlevel, grp) || fmt == 0 || grp == 0) {
         return;
     }
     if ((m_trace.trace_config & TRACE_MASK_LEVEL) &  dlevel) {

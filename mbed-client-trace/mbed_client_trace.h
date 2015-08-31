@@ -89,13 +89,13 @@ extern "C" {
 #define TRACE_LEVEL_CMD           0x01
 
 //usage macros:
-#define tr_info(...)            tracef(TRACE_LEVEL_INFO,    TRACE_GROUP, __VA_ARGS__)   //!< Print info message
-#define tr_debug(...)           tracef(TRACE_LEVEL_DEBUG,   TRACE_GROUP, __VA_ARGS__)   //!< Print debug message
-#define tr_warning(...)         tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Print warning message
-#define tr_warn(...)            tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Alternative warning message
-#define tr_error(...)           tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Print Error Message
-#define tr_err(...)             tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Alternative error message
-#define tr_cmdline(...)         tracef(TRACE_LEVEL_CMD,     TRACE_GROUP, __VA_ARGS__)   //!< Special print for cmdline. See more from TRACE_LEVEL_CMD -level
+#define tr_info(...)            mbed_tracef(TRACE_LEVEL_INFO,    TRACE_GROUP, __VA_ARGS__)   //!< Print info message
+#define tr_debug(...)           mbed_tracef(TRACE_LEVEL_DEBUG,   TRACE_GROUP, __VA_ARGS__)   //!< Print debug message
+#define tr_warning(...)         mbed_tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Print warning message
+#define tr_warn(...)            mbed_tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Alternative warning message
+#define tr_error(...)           mbed_tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Print Error Message
+#define tr_err(...)             mbed_tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Alternative error message
+#define tr_cmdline(...)         mbed_tracef(TRACE_LEVEL_CMD,     TRACE_GROUP, __VA_ARGS__)   //!< Special print for cmdline. See more from TRACE_LEVEL_CMD -level
 
 /** Possible to skip all traces in compile time */
 #if defined(YOTTA_CFG_MBED_CLIENT_TRACE)
@@ -240,20 +240,20 @@ char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
 char* mbed_trace_array(const uint8_t* buf, uint16_t len);
 
 #else //__GNUC__ || __CC_ARM
-int trace_init( void );
-void trace_free( void );
-void set_trace_config(uint8_t config);
-void set_trace_prefix_function( char* (*pref_f)(size_t) );
-void set_trace_print_function( void (*print_f)(const char*) );
-void set_trace_cmdprint_function( void (*printf)(const char*) );
-void set_trace_exclude_filters(char* filters);
-const char* get_trace_exclude_filters(void);
-void set_trace_include_filters(char* filters);
-const char* get_trace_include_filters(void);
-void tracef(uint8_t dlevel, const char* grp, const char *fmt, ...);
-char* trace_ipv6(const void *addr_ptr);
-char* trace_array(const uint8_t* buf, uint16_t len);
-char* trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);       
+int  mbed_client_trace_init( void );
+void mbed_client_trace_free( void );
+void mbed_client_trace_config_set(uint8_t config);
+void mbed_client_trace_prefix_function_set( char* (*pref_f)(size_t) );
+void mbed_client_trace_print_function_set( void (*print_f)(const char*) );
+void mbed_client_trace_cmdprint_function_set( void (*printf)(const char*) );
+void mbed_client_trace_exclude_filters_set(char* filters);
+const char* mbed_client_trace_exclude_filters_get(void);
+void mbed_client_trace_include_filters_set(char* filters);
+const char* mbed_client_trace_include_filters_get(void);
+void mbed_tracef(uint8_t dlevel, const char* grp, const char *fmt, ...);
+char* mbed_trace_ipv6(const void *addr_ptr);
+char* mbed_trace_array(const uint8_t* buf, uint16_t len);
+char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);       
 
 #endif
 
@@ -261,21 +261,20 @@ char* trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
 #else // __GNUC__ || __CC_ARM
 
 // trace functionality not supported
-#define trace_init(...)                ((void) 0)
-#define trace_free(...)                ((void) 0)
-#define set_trace_config(...)          ((void) 0)
-#define set_trace_prefix_function(...) ((void) 0)
-#define set_trace_print_function(...)  ((void) 0)
-#define set_trace_cmdprint_function(...)  ((void) 0)
-#define set_trace_exclude_filters(...) ((void) 0)
-#define set_trace_include_filters(...) ((void) 0)
-#define get_trace_exclude_filters(...) ((void) 0)
-#define get_trace_include_filters(...) ((void) 0)
+#define mbed_client_trace_init(...)                ((void) 0)
+#define mbed_client_trace_free(...)                ((void) 0)
+#define mbed_client_trace_config_set(...)          ((void) 0)
+#define mbed_client_trace_prefix_function_set(...) ((void) 0)
+#define mbed_client_trace_print_function_set(...)  ((void) 0)
+#define mbed_client_trace_cmdprint_function_set(...)  ((void) 0)
+#define mbed_client_trace_exclude_filters_get(...) ((void) 0)
+#define mbed_client_trace_include_filters_set(...) ((void) 0)
+#define mbed_client_trace_include_filters_get(...) ((void) 0)
 
-#define tracef(...)                    ((void) 0)
-#define trace_ipv6(...)                ((void) 0)
-#define trace_array(...)               ((void) 0)
-#define trace_ipv6_prefix(...)         ((void) 0)
+#define mbed_tracef(...)                    ((void) 0)
+#define mbed_trace_ipv6(...)                ((void) 0)
+#define mbed_trace_array(...)               ((void) 0)
+#define mbed_trace_ipv6_prefix(...)         ((void) 0)
 
 #endif //YOTTA_CFG_MBED_CLIENT_TRACE
 
