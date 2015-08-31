@@ -1,0 +1,26 @@
+{
+  "name": "mbed-client-trace",
+  "version": "0.0.1",
+  "description": "Simple Trace library for mbed clients",
+  "keywords": [
+    "trace",
+    "debug",
+    "library",
+    "client"
+  ],
+  "author": "Jussi Vatjus-Anttila",
+  "repository": {
+    "url": "https://github.com/ARMmbed/mbed-client-trace.git",
+    "type": "git"
+  },
+  "homepage": "https://github.com/ARMmbed/mbed-client-trace",
+  "licenses": [
+    {
+      "url": "https://spdx.org/licenses/Apache-2.0",
+      "type": "Apache-2.0"
+    }
+  ],
+  "dependencies": {
+    "nanostack-libservice": "~3.0.0"
+  }
+}
