@@ -28,7 +28,7 @@
  *      #define TRACE_GROUP  "main"
  *
  *      int main(void){
- *          trace_init();   // initialize trace library
+ *          mbed_client_trace_init();   // initialize trace library
  *          tr_debug("this is debug msg");  //print debug message to stdout: "[DBG]
  *          tr_err("this is error msg");
  *          tr_warn("this is warning msg");
@@ -39,8 +39,8 @@
  * Activate with compiler flag: YOTTA_CFG_MBED_CLIENT_TRACE
  *
  */
-#ifndef MBE_CLIENT_TRACE_H_
-#define MBE_CLIENT_TRACE_H_
+#ifndef MBED_CLIENT_TRACE_H_
+#define MBED_CLIENT_TRACE_H_
 #include "ns_types.h"
 
 #ifdef __cplusplus
@@ -152,7 +152,7 @@ void mbed_client_trace_prefix_function_set( char* (*pref_f)(size_t) );
  * Can be used for e.g. time string
  * e.g.
  *   char* trace_suffix(){ return " END"; }
- *   set_trace_suffix_function( &trace_suffix );
+ *   mbed_client_trace_suffix_function_set( &trace_suffix );
  */
 void mbed_client_trace_suffix_function_set(char* (*suffix_f)(void) );
 /**
@@ -171,7 +171,7 @@ void mbed_client_trace_cmdprint_function_set( void (*printf)(const char*) );
  * trace print will be ignored.
  * e.g.: 
  *  mbed_client_trace_exclude_filters_set("mygr");
- *  tracef(TRACE_ACTIVE_LEVEL_DEBUG, "ougr", "This is not printed");
+ *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "ougr", "This is not printed");
  */
 void mbed_client_trace_exclude_filters_set(char* filters);
 /** get trace exclude filters
@@ -182,8 +182,8 @@ const char* mbed_client_trace_exclude_filters_get(void);
  * trace will be printed.
  * e.g.:
  *  set_trace_include_filters("mygr");
- *  tracef(TRACE_ACTIVE_LEVEL_DEBUG, "mygr", "Hi There");
- *  tracef(TRACE_ACTIVE_LEVEL_DEBUG, "grp2", "This is not printed");
+ *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "mygr", "Hi There");
+ *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "grp2", "This is not printed");
  */
 void mbed_client_trace_include_filters_set(char* filters);
 /** get trace include filters
@@ -193,7 +193,7 @@ const char* mbed_client_trace_include_filters_get(void);
  * General trace function
  * This should be used every time when user want to print out something important thing
  * Usage e.g.
- *   tracef( TRACE_LEVEL_INFO, "mygr", "Hello world!");
+ *   mbed_tracef( TRACE_LEVEL_INFO, "mygr", "Hello world!");
  *
  * @param dlevel debug level
  * @param grp    trace group
@@ -210,7 +210,7 @@ const char* mbed_trace_last(void);
  * table to human readable string.
  * usage e.g.
  * char ipv6[16] = {...}; // ! array length is 16 bytes !
- * tracef(TRACE_LEVEL_INFO, "mygr", "ipv6 addr: %s", trace_ipv6(ipv6));
+ * mbed_tracef(TRACE_LEVEL_INFO, "mygr", "ipv6 addr: %s", trace_ipv6(ipv6));
  *
  * @param add_ptr  IPv6 Address pointer
  * @return temporary buffer where ipv6 is in string format
@@ -220,7 +220,7 @@ char* mbed_trace_ipv6(const void *addr_ptr);
  * tracef helping function for print ipv6 prefix
  * usage e.g.
  * char ipv6[16] = {...}; // ! array length is 16 bytes !
- * tracef(TRACE_LEVEL_INFO, "mygr", "ipv6 addr: %s", trace_ipv6_prefix(ipv6, 4));
+ * mbed_tracef(TRACE_LEVEL_INFO, "mygr", "ipv6 addr: %s", trace_ipv6_prefix(ipv6, 4));
  *
  * @param prefix        IPv6 Address pointer
  * @param prefix_len    prefix length
@@ -231,7 +231,7 @@ char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
  * tracef helping function for convert hex-array to string.
  * usage e.g.
  *  char myarr[] = {0x10, 0x20};
- *  tracef(TRACE_LEVEL_INFO, "mygr", "arr: %s", trace_array(myarr, 2));
+ *  mbed_tracef(TRACE_LEVEL_INFO, "mygr", "arr: %s", trace_array(myarr, 2));
  *
  * @param buf  hex array pointer
  * @param len  buffer length
