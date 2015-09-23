@@ -14,7 +14,8 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
         add_test(mbed_client_trace_test "build/x86-windows-native/test/mbed_client_trace_test")
     endif()
     if(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
-        add_test(mbed_client_trace_test "../../../build/x86-linux-native/test/mbed_client_trace_test")
+        SET(TEST_EXECUTABLE "../../../build/x86-linux-native/test/mbed_client_trace_test")
+        add_test(mbed_client_trace_test ${TEST_EXECUTABLE})
     endif()
     
 endif()
