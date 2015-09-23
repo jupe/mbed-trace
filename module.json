@@ -20,7 +20,12 @@
       "type": "Apache-2.0"
     }
   ],
-  "dependencies": {
-    "nanostack-libservice": "~3.0.0"
+  "testTargetDependencies": {
+    "x86-linux-native": {
+        "cpputest": "ARMmbed/cpputest"
+    }, 
+    "x86-windows-native": {
+        "cpputest": "ARMmbed/cpputest"
+    }
   }
 }

@@ -20,10 +20,11 @@
 
 #define YOTTA_CFG_MBED_CLIENT_TRACE
 #include "mbed-client-trace/mbed_client_trace.h"
-#include "ip6string.h"
-#include "common_functions.h"
+#if MBED_CLIENT_TRACE_FEA_IPV6 == 1
+#include "mbed-client-trace/mbed_client_trace_ip6string.h"
+#endif
 
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix)
+#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
 #endif
@@ -150,6 +151,10 @@ void mbed_client_trace_free(void)
     MEM_FREE(m_trace.filters_include);
     m_trace.filters_include = 0;
     m_trace.filters_length = 0;
+    m_trace.prefix_f = 0;
+    m_trace.suffix_f = 0;
+    m_trace.printf = mbed_client_trace_default_print;
+    m_trace.cmd_printf = 0;
 }
 /** @TODO do we need dynamically change trace buffer sizes ?
 // reconfigure trace buffer sizes
@@ -388,12 +393,13 @@ void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
         m_trace.tmp_data_ptr = m_trace.tmp_data;
     }
 }
-const char *mbed_client_trace_last(void)
+const char *mbed_trace_last(void)
 {
     return m_trace.line;
 }
 /* Helping functions */
 #define tmp_data_left()  m_trace.tmp_data_length-(m_trace.tmp_data_ptr-m_trace.tmp_data)
+#if MBED_CLIENT_TRACE_FEA_IPV6 == 1
 char *mbed_trace_ipv6(const void *addr_ptr)
 {
     char *str = m_trace.tmp_data_ptr;
@@ -407,7 +413,7 @@ char *mbed_trace_ipv6(const void *addr_ptr)
         return "<null>";
     }
     str[0] = 0;
-    ip6tos(addr_ptr, str);
+    mbed_client_trace_ip6tos(addr_ptr, str);
     m_trace.tmp_data_ptr += strlen(str) + 1;
     return str;
 }
@@ -429,10 +435,14 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
         if (prefix == NULL || prefix_len > 128) {
             return "<err>";
         }
+#ifdef COMMON_FUNCTIONS_FN        
         bitcopy(addr, prefix, prefix_len);
+#else
+        return "";
+#endif    
     }
 
-    ip6tos(addr, tmp);
+    mbed_client_trace_ip6tos(addr, tmp);
     retval = snprintf(str, bLeft, "%s/%u", tmp, prefix_len);
     if (retval <= 0 || retval > bLeft) {
         return "";
@@ -441,6 +451,7 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
     m_trace.tmp_data_ptr += retval + 1;
     return str;
 }
+#endif
 char *mbed_trace_array(const uint8_t *buf, uint16_t len)
 {
     int i, retval, bLeft = tmp_data_left();
