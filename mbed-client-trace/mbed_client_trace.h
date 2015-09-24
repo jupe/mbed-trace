@@ -49,9 +49,7 @@ extern "C" {
 #ifdef YOTTA_CFG
 #include <stdint.h>
 #include <stddef.h>
-#define bool char
-#define true 1
-#define false 0
+#include <stdbool.h>
 #else
 #include "ns_types.h"
 #endif
