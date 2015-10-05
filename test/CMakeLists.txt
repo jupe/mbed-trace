@@ -2,7 +2,7 @@
 if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
     
     # describe the test executable
-    add_executable(mbed_client_trace_test Test.cpp)
+    add_executable(mbed_client_trace_test EXCLUDE_FROM_ALL Test.cpp)
     
     include_directories("../yotta_modules/cpputest")
     
@@ -12,10 +12,11 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
     # describe what is actual test binary
     if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE)
         add_test(mbed_client_trace_test "build/x86-windows-native/test/mbed_client_trace_test")
+        add_dependencies(all_tests mbed_client_trace_test)
     endif()
     if(DEFINED TARGET_LIKE_X86_LINUX_NATIVE)
         SET(TEST_EXECUTABLE "../../../build/x86-linux-native/test/mbed_client_trace_test")
         add_test(mbed_client_trace_test ${TEST_EXECUTABLE})
+        add_dependencies(all_tests mbed_client_trace_test)
     endif()
-    
 endif()
