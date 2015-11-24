@@ -48,15 +48,34 @@ TEST_GROUP(trace)
 /* Unity test code starts */
 TEST(trace, Array)
 {
-  unsigned char longStr[1000] = {0x66};
-  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(longStr, 1000) );
+  unsigned char longStr[200] = {0x66};
+  for(int i=0;i<200;i++) {longStr[i] = 0x66; }
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(longStr, 200) );
 }
 
 TEST(trace, LongString)
 {
-  const char longStr[200] = {0x36};
+  char longStr[1000] = {0x36};
+  for(int i=0;i<999;i++) {longStr[i] = 0x36; }
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", longStr );
 }
+
+TEST(trace, TooLong)
+{
+  #define TOO_LONG_SIZE 10000
+  #define TRACE_LINE_SIZE 1024
+  char longStr[TOO_LONG_SIZE] = {0};
+  for(int i=0;i<TOO_LONG_SIZE;i++) { longStr[i] = 0x36; }  
+  
+  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", longStr );
+  
+  char shouldStr[TRACE_LINE_SIZE] = "[DBG ][mygr]: ";
+  for(int i=14;i<TRACE_LINE_SIZE;i++) { shouldStr[i] = 0x36; }
+  shouldStr[TRACE_LINE_SIZE-1] = {0};
+  STRCMP_EQUAL(shouldStr, buf);
+}
+
 #if MBED_CLIENT_TRACE_FEA_IPV6 == 1
 #ifdef COMMON_FUNCTIONS_FN
 TEST(trace, ipv6)
@@ -257,5 +276,14 @@ TEST(trace, suffix)
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "test");
   STRCMP_EQUAL("[<TIME>][DBG ][mygr]: test[END]", buf);
 }
-
-
+TEST(trace, formatting)
+{
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hello %d %d %.1f", 12, 13, 5.5);
+    STRCMP_EQUAL("hello 12 13 5.5", buf);
+    
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hello %d %d %d %d %d %d", 12, 13, 5, 6, 8, 9);
+    STRCMP_EQUAL("hello 12 13 5 6 8 9", buf);
+    
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "HOH %d HAH %d %d %d %d %d", 12, 13, 5, 6, 8, 9);
+    STRCMP_EQUAL("HOH 12 HAH 13 5 6 8 9", buf);
+}

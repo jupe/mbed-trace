@@ -17,3 +17,18 @@ int main(void){
     return 0;
 }
 ```
+
+
+## Unit tests
+
+* In linux:
+```
+yotta target x86-linux-native
+yotta test mbed_client_trace_test
+```
+
+* In linux:
+```
+yotta target x86-windows-native
+yotta test mbed_client_trace_test
+```
