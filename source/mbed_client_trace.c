@@ -18,7 +18,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#ifndef YOTTA_CFG_MBED_CLIENT_TRACE
 #define YOTTA_CFG_MBED_CLIENT_TRACE
+#endif
+
 #include "mbed-client-trace/mbed_client_trace.h"
 #if MBED_CLIENT_TRACE_FEA_IPV6 == 1
 #include "mbed-client-trace/mbed_client_trace_ip6string.h"
