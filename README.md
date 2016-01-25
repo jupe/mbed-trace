@@ -8,22 +8,21 @@ This library purpose is to provide light, simple and general tracing solution fo
 
 ## Philosophy
 
-* Library should be as light, fast, simple and abstract than possible
+* Library should be as light, fast, simple and as abstract than possible
 * Minimal dependencies
-* Initialization allocate required memory space once in application life-time, so no new malloc/free's needed when traces is printed
+* Initialization allocate required memory space once in application life-time, so no new malloc/free's needed when traces is used
 * trace -methods should be as fast as possible
 * after trace -method call it release print required resources
-* trace method call produce single line, which contains <level>, <group> and <message>
+* trace method call produce single line, which contains `<level>`, `<group>` and `<message>`
 * allow to filter messages on the fly, and in compile time (not fully supported)
 
 ## Compromises
 
-* Traces are stored as a ascii arrays in flash memory (which take quite much memory space) because of
-** it doesn't require..
-*** to encode/decode trace messages on the fly which could take cpu time too much, or 
-*** require external dependencies to encode traces on compile time and external application to decode traces afterward. (this could be future direct to go) 
+* Traces are stored as a ascii arrays in flash memory (which take quite much memory space) because of it doesn't require..
+ * to encode/decode trace messages on the fly which could take cpu time too much, or 
+ * require external dev-env dependencies to encode traces on compile time and external application to decode traces afterward. (this could be future direct to go) 
 * Group name length is limited to 4 characters, because of lines looks much cleaner and it is enough for most of use cases to separate module names. Maybe sometimes group names length is not suitable to create clean human readable format, but still 4 character is enought for unique module names.
-* By default it uses stdout as output, because it goes directly to serial port when it is initialized.
+* By default it uses stdout as output because it goes directly to serial port when it is initialized.
 * By default it produce traces like: `[<levl>][grp ]: msg`, because that allows to easy way to detect trace prints and separate traces from normal prints (e.g. with regex)
 * Require sprintf -implementation (`stdio.h`). This take quite much memory, but allows efficient way to format traces.
 * is not thread safe (sorry, but current implementation not have mutexes, but PR's are more than wellcome)
@@ -42,19 +41,20 @@ This library purpose is to provide light, simple and general tracing solution fo
 ### Pre-requirements
 
 * Initialize serial port so that stdout works. You can verify with `printf()` -function that serial port works.
+ * if you want to redirect traces to somewhere else, see [trace api](https://github.com/ARMmbed/mbed-client-trace/blob/master/mbed-client-trace/mbed_client_trace.h#L170).
 * Trace initialization (`mbed_client_trace_init`) need to be called once before using any other api's. It allocate trace buffer and initialize internal variables.
 * define `TRACE_GROUP` in your source code (not in header!), where you want to use traces. `TRACE_GROUP` 1-4 characters long char-array (e.g. `#define TRACE_GROUP "APPL"`), which will be printed in every trace lines.
 
 #### Traces
 
-Any time when you want to print some traces, use tr_<level> -macros. macro's behaviour ~exactly same than `printf()`, so propably you are familiar with that already, e.g. by adding: `tr_debug("hello %s", "trace")` will produce trace line: `[DBG ][APPL] hello trace` 
+Any time when you want to print some traces, use tr_<level> -macros. macro's behaviour ~exactly same than `printf()`, so propably you are familiar with that already, e.g. by adding: `tr_debug("hello %s", "trace")` will produce trace line: `[DBG ][APPL] hello trace<cr><lf>` 
 
 Available levels:
 * debug
 * warning
 * error
 * info
-* cmdline (special behavior)
+* cmdline (special behavior, normally shouldn't be used)
 
 Initialization (once in application life-time)
 ```c
