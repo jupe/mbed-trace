@@ -1,7 +1,7 @@
 {
   "name": "mbed-client-trace",
   "version": "0.1.0",
-  "description": "Simple Trace library for mbed clients",
+  "description": "Trace library for mbed devices",
   "keywords": [
     "trace",
     "debug",
