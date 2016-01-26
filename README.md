@@ -13,7 +13,7 @@ The purpose of the library is to provide a light, simple and general tracing sol
 * The memory space required by the library is allocated at the initialization only once during the application lifetime.
 * No new malloc/free are needed when running the library.
 * The trace methods must be as fast as possible.
-* After a trace method call, it release print required resources **(Pekka: selvennettävä)**
+* After a trace method call, the trace function needs to release the required resources.
 * A trace method call produces a single line containing `<level>`, `<group>` and `<message>`
 * It must be possible to filter messages on the fly. Compile time filtering is not fully supported yet.
 
@@ -23,8 +23,8 @@ The purpose of the library is to provide a light, simple and general tracing sol
  * encode/decode the trace messages on the fly (this may take too much CPU time) or 
  * have external dev-env dependencies to encode the traces compile time and an external application to decode the traces. 
 * The group name length is limited to four characters. This makes the lines cleaner and it is enough for most use cases for separating the module names. The group name length may not be suitable for a clean human readable format, but still four characters is enough for unique module names.
-* By default, it uses `stdout` as output target because it goes directly to serial port when it is initialized. **(Pekka: selvennettävä, monta kertaa it, mikä se it on?)**
-* By default, it produces traces like: `[<levl>][grp ]: msg`. This provides an easy way to detect trace prints and separate traces from normal prints (for example with _regex_). **(Pekka: taas it. Library, tool vai mikä?)**
+* The trace function uses `stdout` as the default output target because it goes directly to serial port when initialized. 
+* The trace function produces traces like: `[<levl>][grp ]: msg`. This provides an easy way to detect trace prints and separate traces from normal prints (for example with _regex_).
 * This approach requires a `sprintf` implementation (`stdio.h`). The memory consumption is pretty high, but it allows an efficient way to format traces.
 * The solution is not Thread safe. (Sorry, but the current implementation does not have mutexes. PRs are more than welcome.)
 
@@ -41,7 +41,7 @@ The purpose of the library is to provide a light, simple and general tracing sol
 
 ### Prerequisites
 
-* Initialize the serial port so that `stdout` works. You can verify that the serial port works using the `printf()` -function.
+* Initialize the serial port so that `stdout` works. You can verify that the serial port works using the `printf()` function.
  * if you want to redirect the traces somewhere else, see the [trace API](https://github.com/ARMmbed/mbed-client-trace/blob/master/mbed-client-trace/mbed_client_trace.h#L170).
 * Call the trace initialization (`mbed_client_trace_init`) once before using any other APIs. It allocates the trace buffer and initializes the internal variables.
 * Define `TRACE_GROUP` in your source code (not in the header!) to use traces. `TRACE_GROUP` is a 1-4 character long char-array (for example `#define TRACE_GROUP "APPL"`). This will be printed on every trace line.
