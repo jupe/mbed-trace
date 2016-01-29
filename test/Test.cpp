@@ -53,6 +53,27 @@ TEST(trace, Array)
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(longStr, 200) );
 }
 
+TEST(trace, TwoArray)
+{
+  unsigned char longStr[20] = {0x66};
+  for(int i=0;i<20;i++) {longStr[i] = 0x66; }
+  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s-%s", mbed_trace_array(longStr, 5), mbed_trace_array(longStr, 5) );
+  char shouldStr[60] = {0};
+  sprintf(shouldStr, "[DBG ][mygr]: 66:66:66:66:66-66:66:66:66:66");
+  STRCMP_EQUAL(shouldStr, buf);
+}
+TEST(trace, TreeArray)
+{
+  unsigned char longStr[20] = {};
+  memset(longStr, 0x66, 20);
+  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s-%s-%s", mbed_trace_array(longStr, 5), mbed_trace_array(longStr, 5), mbed_trace_array(longStr, 4) );
+  char shouldStr[60] = {0};
+  sprintf(shouldStr, "[DBG ][mygr]: 66:66:66:66:66-66:66:66:66:66-66:66:66:66");
+  STRCMP_EQUAL(shouldStr, buf);
+}
+
 TEST(trace, LongString)
 {
   char longStr[1000] = {0x36};
