@@ -136,7 +136,7 @@ extern trace_t *g_trace;
  * Get Yotta component version
  * @return version number as string (e.g. "0.1.0")
  */
-const char* mbed_client_trace_get_version(void);
+const char* mbed_client_trace_get_version( trace_t* self );
 /**
  * Create trace instance and initialize trace functionality
  * @param this  NULL when global 

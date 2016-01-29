@@ -105,8 +105,9 @@ typedef struct trace_s {
 
 trace_t *g_trace;
 
-const char* mbed_client_trace_get_version(void)
+const char* mbed_client_trace_get_version( trace_t* self )
 {
+    (void)self;
     return YOTTA_COMPONENT_VERSION;
 }
 
