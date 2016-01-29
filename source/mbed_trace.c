@@ -151,63 +151,63 @@ static trace_t m_trace = {
     .mutex_lock_count = 0
 };
 
-int mbed_trace_init(void)
+int mbed_trace_init( trace_t* self )
 {
-    if (m_trace.line == NULL) {
-        m_trace.line = MBED_TRACE_MEM_ALLOC(m_trace.line_length);
+    if (self->line == NULL) {
+        self->line = MBED_TRACE_MEM_ALLOC(self->line_length);
     }
 
-    if (m_trace.tmp_data == NULL) {
-        m_trace.tmp_data = MBED_TRACE_MEM_ALLOC(m_trace.tmp_data_length);
+    if (self->tmp_data == NULL) {
+        self->tmp_data = MBED_TRACE_MEM_ALLOC(self->tmp_data_length);
     }
-    m_trace.tmp_data_ptr = m_trace.tmp_data;
+    self->tmp_data_ptr = self->tmp_data;
 
-    if (m_trace.filters_exclude == NULL) {
-        m_trace.filters_exclude = MBED_TRACE_MEM_ALLOC(m_trace.filters_length);
+    if (self->filters_exclude == NULL) {
+        self->filters_exclude = MBED_TRACE_MEM_ALLOC(self->filters_length);
     }
-    if (m_trace.filters_include == NULL) {
-        m_trace.filters_include = MBED_TRACE_MEM_ALLOC(m_trace.filters_length);
+    if (self->filters_include == NULL) {
+        self->filters_include = MBED_TRACE_MEM_ALLOC(self->filters_length);
     }
 
-    if (m_trace.line == NULL ||
-            m_trace.tmp_data == NULL ||
-            m_trace.filters_exclude == NULL  ||
-            m_trace.filters_include == NULL) {
+    if (self->line == NULL ||
+            self->tmp_data == NULL ||
+            self->filters_exclude == NULL  ||
+            self->filters_include == NULL) {
         //memory allocation fail
         mbed_trace_free();
         return -1;
     }
-    memset(m_trace.tmp_data, 0, m_trace.tmp_data_length);
-    memset(m_trace.filters_exclude, 0, m_trace.filters_length);
-    memset(m_trace.filters_include, 0, m_trace.filters_length);
-    memset(m_trace.line, 0, m_trace.line_length);
+    memset(self->tmp_data, 0, self->tmp_data_length);
+    memset(self->filters_exclude, 0, self->filters_length);
+    memset(self->filters_include, 0, self->filters_length);
+    memset(self->line, 0, self->line_length);
 
     return 0;
 }
-void mbed_trace_free(void)
+void mbed_trace_free( trace_t* self )
 {
     // release memory
-    MBED_TRACE_MEM_FREE(m_trace.line);
-    MBED_TRACE_MEM_FREE(m_trace.tmp_data);
-    MBED_TRACE_MEM_FREE(m_trace.filters_exclude);
-    MBED_TRACE_MEM_FREE(m_trace.filters_include);
+    MBED_TRACE_MEM_FREE(self->line);
+    MBED_TRACE_MEM_FREE(self->tmp_data);
+    MBED_TRACE_MEM_FREE(self->filters_exclude);
+    MBED_TRACE_MEM_FREE(self->filters_include);
 
     // reset to default values
-    m_trace.trace_config = DEFAULT_TRACE_CONFIG;
-    m_trace.filters_exclude = 0;
-    m_trace.filters_include = 0;
-    m_trace.filters_length = DEFAULT_TRACE_FILTER_LENGTH;
-    m_trace.line = 0;
-    m_trace.line_length = DEFAULT_TRACE_LINE_LENGTH;
-    m_trace.tmp_data = 0;
-    m_trace.tmp_data_length = DEFAULT_TRACE_TMP_LINE_LEN;
-    m_trace.prefix_f = 0;
-    m_trace.suffix_f = 0;
-    m_trace.printf  = mbed_trace_default_print;
-    m_trace.cmd_printf = 0;
-    m_trace.mutex_wait_f = 0;
-    m_trace.mutex_release_f = 0;
-    m_trace.mutex_lock_count = 0;
+    self->trace_config = DEFAULT_TRACE_CONFIG;
+    self->filters_exclude = 0;
+    self->filters_include = 0;
+    self->filters_length = DEFAULT_TRACE_FILTER_LENGTH;
+    self->line = 0;
+    self->line_length = DEFAULT_TRACE_LINE_LENGTH;
+    self->tmp_data = 0;
+    self->tmp_data_length = DEFAULT_TRACE_TMP_LINE_LEN;
+    self->prefix_f = 0;
+    self->suffix_f = 0;
+    self->printf  = mbed_trace_default_print;
+    self->cmd_printf = 0;
+    self->mutex_wait_f = 0;
+    self->mutex_release_f = 0;
+    self->mutex_lock_count = 0;
 }
 static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length)
 {
@@ -215,70 +215,70 @@ static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length)
     *buffer  = MBED_TRACE_MEM_ALLOC(new_length);
     *length_ptr = new_length;
 }
-void mbed_trace_buffer_sizes(int lineLength, int tmpLength)
+void mbed_trace_buffer_sizes(trace_t *self, int lineLength, int tmpLength)
 {
     if( lineLength > 0 ) {
-        mbed_trace_realloc( &(m_trace.line), &m_trace.line_length, lineLength );
+        mbed_trace_realloc( &(self->line), &self->line_length, lineLength );
     }
     if( tmpLength > 0 ) {
-        mbed_trace_realloc( &(m_trace.tmp_data), &m_trace.tmp_data_length, tmpLength);
+        mbed_trace_realloc( &(self->tmp_data), &self->tmp_data_length, tmpLength);
         mbed_trace_reset_tmp();
     }
 }
 void mbed_trace_config_set(uint8_t config)
 {
-    m_trace.trace_config = config;
+    self->trace_config = config;
 }
 uint8_t mbed_trace_config_get(void)
 {
-    return m_trace.trace_config;
+    return self->trace_config;
 }
 void mbed_trace_prefix_function_set(char *(*pref_f)(size_t))
 {
-    m_trace.prefix_f = pref_f;
+    self->prefix_f = pref_f;
 }
 void mbed_trace_suffix_function_set(char *(*suffix_f)(void))
 {
-    m_trace.suffix_f = suffix_f;
+    self->suffix_f = suffix_f;
 }
 void mbed_trace_print_function_set(void (*printf)(const char *))
 {
-    m_trace.printf = printf;
+    self->printf = printf;
 }
 void mbed_trace_cmdprint_function_set(void (*printf)(const char *))
 {
-    m_trace.cmd_printf = printf;
+    self->cmd_printf = printf;
 }
 void mbed_trace_mutex_wait_function_set(void (*mutex_wait_f)(void))
 {
-    m_trace.mutex_wait_f = mutex_wait_f;
+    self->mutex_wait_f = mutex_wait_f;
 }
 void mbed_trace_mutex_release_function_set(void (*mutex_release_f)(void))
 {
-    m_trace.mutex_release_f = mutex_release_f;
+    self->mutex_release_f = mutex_release_f;
 }
 void mbed_trace_exclude_filters_set(char *filters)
 {
     if (filters) {
-        (void)strncpy(m_trace.filters_exclude, filters, m_trace.filters_length);
+        (void)strncpy(self->filters_exclude, filters, self->filters_length);
     } else {
-        m_trace.filters_exclude[0] = 0;
+        self->filters_exclude[0] = 0;
     }
 }
 const char *mbed_trace_exclude_filters_get(void)
 {
-    return m_trace.filters_exclude;
+    return self->filters_exclude;
 }
 const char *mbed_trace_include_filters_get(void)
 {
-    return m_trace.filters_include;
+    return self->filters_include;
 }
 void mbed_trace_include_filters_set(char *filters)
 {
     if (filters) {
-        (void)strncpy(m_trace.filters_include, filters, m_trace.filters_length);
+        (void)strncpy(self->filters_include, filters, self->filters_length);
     } else {
-        m_trace.filters_include[0] = 0;
+        self->filters_include[0] = 0;
     }
 }
 static int8_t mbed_trace_skip(int8_t dlevel, const char *grp)
@@ -287,13 +287,13 @@ static int8_t mbed_trace_skip(int8_t dlevel, const char *grp)
         // filter debug prints only when dlevel is >0 and grp is given
 
         /// @TODO this could be much better..
-        if (m_trace.filters_exclude[0] != '\0' &&
-                strstr(m_trace.filters_exclude, grp) != 0) {
+        if (self->filters_exclude[0] != '\0' &&
+                strstr(self->filters_exclude, grp) != 0) {
             //grp was in exclude list
             return 1;
         }
-        if (m_trace.filters_include[0] != '\0' &&
-                strstr(m_trace.filters_include, grp) == 0) {
+        if (self->filters_include[0] != '\0' &&
+                strstr(self->filters_include, grp) == 0) {
             //grp was in include list
             return 1;
         }
@@ -313,38 +313,38 @@ void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
 }
 void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
 {
-    if ( m_trace.mutex_wait_f ) {
-        m_trace.mutex_wait_f();
-        m_trace.mutex_lock_count++;
+    if ( self->mutex_wait_f ) {
+        self->mutex_wait_f();
+        self->mutex_lock_count++;
     }
 
-    if (NULL == m_trace.line) {
+    if (NULL == self->line) {
         goto end;
     }
 
-    m_trace.line[0] = 0; //by default trace is empty
+    self->line[0] = 0; //by default trace is empty
 
-    if (mbed_trace_skip(dlevel, grp) || fmt == 0 || grp == 0 || !m_trace.printf) {
+    if (mbed_trace_skip(dlevel, grp) || fmt == 0 || grp == 0 || !self->printf) {
         //return tmp data pointer back to the beginning
         mbed_trace_reset_tmp();
         goto end;
     }
-    if ((m_trace.trace_config & TRACE_MASK_LEVEL) &  dlevel) {
-        bool color = (m_trace.trace_config & TRACE_MODE_COLOR) != 0;
-        bool plain = (m_trace.trace_config & TRACE_MODE_PLAIN) != 0;
-        bool cr    = (m_trace.trace_config & TRACE_CARRIAGE_RETURN) != 0;
+    if ((self->trace_config & TRACE_MASK_LEVEL) &  dlevel) {
+        bool color = (self->trace_config & TRACE_MODE_COLOR) != 0;
+        bool plain = (self->trace_config & TRACE_MODE_PLAIN) != 0;
+        bool cr    = (self->trace_config & TRACE_CARRIAGE_RETURN) != 0;
 
-        int retval = 0, bLeft = m_trace.line_length;
-        char *ptr = m_trace.line;
+        int retval = 0, bLeft = self->line_length;
+        char *ptr = self->line;
         if (plain == true || dlevel == TRACE_LEVEL_CMD) {
             //add trace data
             retval = vsnprintf(ptr, bLeft, fmt, ap);
-            if (dlevel == TRACE_LEVEL_CMD && m_trace.cmd_printf) {
-                m_trace.cmd_printf(m_trace.line);
-                m_trace.cmd_printf("\n");
+            if (dlevel == TRACE_LEVEL_CMD && self->cmd_printf) {
+                self->cmd_printf(self->line);
+                self->cmd_printf("\n");
             } else {
                 //print out whole data
-                m_trace.printf(m_trace.line);
+                self->printf(self->line);
             }
         } else {
             if (color) {
@@ -388,7 +388,7 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
                 }
 
             }
-            if (bLeft > 0 && m_trace.prefix_f) {
+            if (bLeft > 0 && self->prefix_f) {
                 //find out length of body
                 size_t sz = 0;
                 va_list ap2;
@@ -396,7 +396,7 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
                 sz = vsnprintf(NULL, 0, fmt, ap2) + retval + (retval ? 4 : 0);
                 va_end(ap2);
                 //add prefix string
-                retval = snprintf(ptr, bLeft, "%s", m_trace.prefix_f(sz));
+                retval = snprintf(ptr, bLeft, "%s", self->prefix_f(sz));
                 if (retval >= bLeft) {
                     retval = 0;
                 }
@@ -444,9 +444,9 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
                 }
             }
 
-            if (retval > 0 && bLeft > 0  && m_trace.suffix_f) {
+            if (retval > 0 && bLeft > 0  && self->suffix_f) {
                 //add suffix string
-                retval = snprintf(ptr, bLeft, "%s", m_trace.suffix_f());
+                retval = snprintf(ptr, bLeft, "%s", self->suffix_f());
                 if (retval >= bLeft) {
                     retval = 0;
                 }
@@ -469,18 +469,18 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
                 }
             }
             //print out whole data
-            m_trace.printf(m_trace.line);
+            self->printf(self->line);
         }
         //return tmp data pointer back to the beginning
         mbed_trace_reset_tmp();
     }
 
 end:
-    if ( m_trace.mutex_release_f ) {
+    if ( self->mutex_release_f ) {
         // Store the mutex lock count to temp variable so that it won't get
         // clobbered during last loop iteration when mutex gets released
-        int count = m_trace.mutex_lock_count;
-        m_trace.mutex_lock_count = 0;
+        int count = self->mutex_lock_count;
+        self->mutex_lock_count = 0;
         // Since the helper functions (eg. mbed_trace_array) are used like this:
         //   mbed_tracef(TRACE_LEVEL_INFO, "grp", "%s", mbed_trace_array(some_array))
         // The helper function MUST acquire the mutex if it modifies any buffers. However
@@ -489,29 +489,29 @@ end:
         // for itself. This means that here we have to unlock the mutex as many times
         // as it was acquired by trace function and any possible helper functions.
         do {
-            m_trace.mutex_release_f();
+            self->mutex_release_f();
         } while (--count > 0);
     }
 }
 static void mbed_trace_reset_tmp(void)
 {
-    m_trace.tmp_data_ptr = m_trace.tmp_data;
+    self->tmp_data_ptr = self->tmp_data;
 }
 const char *mbed_trace_last(void)
 {
-    return m_trace.line;
+    return self->line;
 }
 /* Helping functions */
-#define tmp_data_left()  m_trace.tmp_data_length-(m_trace.tmp_data_ptr-m_trace.tmp_data)
+#define tmp_data_left()  self->tmp_data_length-(self->tmp_data_ptr-self->tmp_data)
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
 char *mbed_trace_ipv6(const void *addr_ptr)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
-    if ( m_trace.mutex_wait_f ) {
-        m_trace.mutex_wait_f();
-        m_trace.mutex_lock_count++;
+    if ( self->mutex_wait_f ) {
+        self->mutex_wait_f();
+        self->mutex_lock_count++;
     }
-    char *str = m_trace.tmp_data_ptr;
+    char *str = self->tmp_data_ptr;
     if (str == NULL) {
         return "";
     }
@@ -522,17 +522,17 @@ char *mbed_trace_ipv6(const void *addr_ptr)
         return "<null>";
     }
     str[0] = 0;
-    m_trace.tmp_data_ptr += ip6tos(addr_ptr, str) + 1;
+    self->tmp_data_ptr += ip6tos(addr_ptr, str) + 1;
     return str;
 }
 char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
-    if ( m_trace.mutex_wait_f ) {
-        m_trace.mutex_wait_f();
-        m_trace.mutex_lock_count++;
+    if ( self->mutex_wait_f ) {
+        self->mutex_wait_f();
+        self->mutex_lock_count++;
     }
-    char *str = m_trace.tmp_data_ptr;
+    char *str = self->tmp_data_ptr;
     if (str == NULL) {
         return "";
     }
@@ -544,20 +544,20 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
         return "<err>";
     }
 
-    m_trace.tmp_data_ptr += ip6_prefix_tos(prefix, prefix_len, str) + 1;
+    self->tmp_data_ptr += ip6_prefix_tos(prefix, prefix_len, str) + 1;
     return str;
 }
 #endif //MBED_CONF_MBED_TRACE_FEA_IPV6
 char *mbed_trace_array(const uint8_t *buf, uint16_t len)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
-    if ( m_trace.mutex_wait_f ) {
-        m_trace.mutex_wait_f();
-        m_trace.mutex_lock_count++;
+    if ( self->mutex_wait_f ) {
+        self->mutex_wait_f();
+        self->mutex_lock_count++;
     }
     int i, bLeft = tmp_data_left();
     char *str, *wptr;
-    str = m_trace.tmp_data_ptr;
+    str = self->tmp_data_ptr;
     if (len == 0 || str == NULL || bLeft == 0) {
         return "";
     }
@@ -590,6 +590,6 @@ char *mbed_trace_array(const uint8_t *buf, uint16_t len)
             *(wptr - 1) = 0;
         }
     }
-    m_trace.tmp_data_ptr = wptr;
+    self->tmp_data_ptr = wptr;
     return str;
 }

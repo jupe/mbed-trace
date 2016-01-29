@@ -180,17 +180,17 @@ extern "C" {
  * Initialize trace functionality
  * @return 0 when all success, otherwise non zero
  */
-int mbed_trace_init( void );
+int mbed_trace_init( trace_t* self );
 /**
  * Free trace memory
  */
-void mbed_trace_free( void );
+void mbed_trace_free( trace_t* self );
 /**
  * Resize buffers (line / tmp ) sizes
  * @param lineLength    new maximum length for trace line (0 = do no resize)
  * @param tmpLength     new maximum length for trace tmp buffer (used for trace_array, etc) (0 = do no resize)
  */
-void mbed_trace_buffer_sizes(int lineLength, int tmpLength);
+void mbed_trace_buffer_sizes(trace_t* self, int lineLength, int tmpLength);
 /**
  *  Set trace configurations
  *  Possible parameters:
@@ -213,11 +213,11 @@ void mbed_trace_buffer_sizes(int lineLength, int tmpLength);
  *  mbed_trace_config_set( TRACE_ACTIVE_LEVEL_ALL|TRACE_MODE_COLOR );
  * @endcode
  */
-void mbed_trace_config_set(uint8_t config);
+void mbed_trace_config_set(trace_t* self, uint8_t config);
 /** get trace configurations
  * @return trace configuration byte
  */
-uint8_t mbed_trace_config_get(void);
+uint8_t mbed_trace_config_get(trace_t* self);
 /**
  * Set trace prefix function
  * pref_f -function return string with null terminated
@@ -226,7 +226,7 @@ uint8_t mbed_trace_config_get(void);
  *   char* trace_time(){ return "rtc-time-in-string"; }
  *   mbed_trace_prefix_function_set( &trace_time );
  */
-void mbed_trace_prefix_function_set( char* (*pref_f)(size_t) );
+void mbed_trace_prefix_function_set( trace_t* self, char* (*pref_f)(size_t) );
 /**
  * Set trace suffix function
  * suffix -function return string with null terminated
@@ -235,18 +235,18 @@ void mbed_trace_prefix_function_set( char* (*pref_f)(size_t) );
  *   char* trace_suffix(){ return " END"; }
  *   mbed_trace_suffix_function_set( &trace_suffix );
  */
-void mbed_trace_suffix_function_set(char* (*suffix_f)(void) );
+void mbed_trace_suffix_function_set(trace_t* self, char* (*suffix_f)(void) );
 /**
  * Set trace print function
  * By default, trace module print using printf() function,
  * but with this you can write own print function,
  * for e.g. to other IO device.
  */
-void mbed_trace_print_function_set( void (*print_f)(const char*) );
+void mbed_trace_print_function_set(trace_t* self, void (*print_f)(const char*) );
 /**
  * Set trace print function for tr_cmdline()
  */
-void mbed_trace_cmdprint_function_set( void (*printf)(const char*) );
+void mbed_trace_cmdprint_function_set(trace_t* self, void (*printf)(const char*) );
 /**
  * Set trace mutex wait function
  * By default, trace calls are not thread safe.
@@ -254,7 +254,7 @@ void mbed_trace_cmdprint_function_set( void (*printf)(const char*) );
  * The specific implementation is up to the application developer, but the mutex must count so it can
  * be acquired from a single thread repeatedly.
  */
-void mbed_trace_mutex_wait_function_set(void (*mutex_wait_f)(void));
+void mbed_trace_mutex_wait_function_set(trace_t* self, void (*mutex_wait_f)(void));
 /**
  * Set trace mutex release function
  * By default, trace calls are not thread safe.
@@ -262,7 +262,7 @@ void mbed_trace_mutex_wait_function_set(void (*mutex_wait_f)(void));
  * each trace call. The specific implementation is up to the application developer, but the mutex must count so it can
  * be acquired from a single thread repeatedly.
  */
-void mbed_trace_mutex_release_function_set(void (*mutex_release_f)(void));
+void mbed_trace_mutex_release_function_set(trace_t* self, void (*mutex_release_f)(void));
 /**
  * When trace group contains text in filters,
  * trace print will be ignored.
@@ -270,10 +270,10 @@ void mbed_trace_mutex_release_function_set(void (*mutex_release_f)(void));
  *  mbed_trace_exclude_filters_set("mygr");
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "ougr", "This is not printed");
  */
-void mbed_trace_exclude_filters_set(char* filters);
+void mbed_trace_exclude_filters_set(trace_t* self, char* filters);
 /** get trace exclude filters
  */
-const char* mbed_trace_exclude_filters_get(void);
+const char* mbed_trace_exclude_filters_get(trace_t* self);
 /**
  * When trace group contains text in filter,
  * trace will be printed.
@@ -282,10 +282,10 @@ const char* mbed_trace_exclude_filters_get(void);
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "mygr", "Hi There");
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "grp2", "This is not printed");
  */
-void mbed_trace_include_filters_set(char* filters);
+void mbed_trace_include_filters_set(trace_t* self, char* filters);
 /** get trace include filters
  */
-const char* mbed_trace_include_filters_get(void);
+const char* mbed_trace_include_filters_get(trace_t* self);
 /**
  * General trace function
  * This should be used every time when user want to print out something important thing
