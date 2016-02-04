@@ -76,6 +76,18 @@ TEST(trace, TooLong)
   STRCMP_EQUAL(shouldStr, buf);
 }
 
+TEST(trace, BufferResize)
+{
+    uint8_t arr[20] = {0};
+    memset(arr, '0', 20);
+    mbed_client_trace_buffer_sizes(0, 10);
+    STRCMP_EQUAL("30:30:30*", mbed_trace_array(arr, 20));
+    mbed_client_trace_buffer_sizes(0, 15);
+    STRCMP_EQUAL("30:30:30:30*", mbed_trace_array(arr, 20));
+    mbed_client_trace_buffer_sizes(0, 15);
+    STRCMP_EQUAL("30:30:30:30", mbed_trace_array(arr, 4));
+}
+
 #if MBED_CLIENT_TRACE_FEA_IPV6 == 1
 #ifdef COMMON_FUNCTIONS_FN
 TEST(trace, ipv6)

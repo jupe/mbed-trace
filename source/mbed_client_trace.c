@@ -53,12 +53,18 @@
 #define DEFAULT_TRACE_LINE_LENGTH         1024
 /** default max temporary buffer size in bytes, used in
     trace_ipv6, trace_array and trace_strn */
+#ifdef YOTTA_CFG_MBED_CLIENT_TRACE_TMP_LINE_LEN
+#define DEFAULT_TRACE_TMP_LINE_LEN        YOTTA_CFG_MBED_CLIENT_TRACE_TMP_LINE_LEN
+#else
 #define DEFAULT_TRACE_TMP_LINE_LEN        128
+#endif
 /** default max filters (include/exclude) length in bytes */
 #define DEFAULT_TRACE_FILTER_LENGTH       24
 
 /** default print function, just redirect str to printf */
+static void mbed_client_trace_realloc( char **buffer, int *length_ptr, int new_length);
 static void mbed_client_trace_default_print(const char *str);
+static void mbed_trace_reset_tmp(void);
 
 typedef struct trace_s {
     /** trace configuration bits */
@@ -159,15 +165,22 @@ void mbed_client_trace_free(void)
     m_trace.printf = mbed_client_trace_default_print;
     m_trace.cmd_printf = 0;
 }
-/** @TODO do we need dynamically change trace buffer sizes ?
-// reconfigure trace buffer sizes
-void set_trace_buffer_sizes(int lineLength, int tmpLength)
+static void mbed_client_trace_realloc( char **buffer, int *length_ptr, int new_length)
 {
-  REALLOC( m_trace.line, dataLength );
-  REALLOC( m_trace.tmp_data, tmpLength);
-  m_trace.tmp_data_length = tmpLength;
+    MEM_FREE(*buffer);
+    *buffer  = MEM_ALLOC(new_length);
+    *length_ptr = new_length;
 }
-*/
+void mbed_client_trace_buffer_sizes(int lineLength, int tmpLength)
+{
+    if( lineLength > 0 ) {
+        mbed_client_trace_realloc( &(m_trace.line), &m_trace.line_length, lineLength );
+    }
+    if( tmpLength > 0 ) {
+        mbed_client_trace_realloc( &(m_trace.tmp_data), &m_trace.tmp_data_length, tmpLength);
+        mbed_trace_reset_tmp();
+    }
+}
 void mbed_client_trace_config_set(uint8_t config)
 {
     m_trace.trace_config = config;
@@ -393,8 +406,12 @@ void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
             m_trace.printf(m_trace.line);
         }
         //return tmp data pointer back to the beginning
-        m_trace.tmp_data_ptr = m_trace.tmp_data;
+        mbed_trace_reset_tmp();
     }
+}
+static void mbed_trace_reset_tmp(void)
+{
+    m_trace.tmp_data_ptr = m_trace.tmp_data;
 }
 const char *mbed_trace_last(void)
 {
@@ -469,8 +486,10 @@ char *mbed_trace_array(const uint8_t *buf, uint16_t len)
     wptr = str;
     wptr[0] = 0;
     const uint8_t *ptr = buf;
+    char overflow = 0;
     for (i = 0; i < len; i++) {
-        if (bLeft <= 0) {
+        if (bLeft <= 3) {
+            overflow = 1;
             break;
         }
         retval = snprintf(wptr, bLeft, "%02x:", *ptr++);
@@ -481,7 +500,14 @@ char *mbed_trace_array(const uint8_t *buf, uint16_t len)
         wptr += retval;
     }
     if (wptr > str) {
-        *(wptr - 1) = 0;    //null to replace last ':' character
+        if( overflow ) {
+            // replace last character as 'star',
+            // which indicate buffer len is not enough
+            *(wptr - 1) = '*';
+        } else {
+            //null to replace last ':' character
+            *(wptr - 1) = 0;
+        }
     }
     m_trace.tmp_data_ptr = wptr;
     return str;

@@ -122,6 +122,12 @@ int mbed_client_trace_init( void );
  */
 void mbed_client_trace_free( void );
 /**
+ * Resize buffers (line / tmp ) sizes
+ * @param lineLength    new maximum length for trace line (0 = do no resize)
+ * @param tmpLength     new maximum length for trace tmp buffer (used for trace_array, etc) (0 = do no resize)
+ */
+void mbed_client_trace_buffer_sizes(int lineLength, int tmpLength);
+/**
  *  Set trace configurations
  *  Possible parameters:
  *
@@ -249,6 +255,8 @@ char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
  * @param buf  hex array pointer
  * @param len  buffer length
  * @return temporary buffer where string copied
+ * if array as string not fit to temp buffer, this function write '*' as last character, 
+ * which indicate that buffer is too small for array.
  */
 char* mbed_trace_array(const uint8_t* buf, uint16_t len);
 
