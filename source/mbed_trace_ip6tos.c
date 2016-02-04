@@ -15,7 +15,7 @@
  */
 #include <stdio.h>
 #include <inttypes.h>
-#include "mbed-client-trace/mbed_client_trace_ip6string.h"
+#include "mbed_trace/mbed_trace_ip6tos.h"
 
 /**
  * Print binary IPv6 address to a string.
@@ -24,7 +24,7 @@
  * \param addr IPv6 address.
  * \p buffer to write string to.
  */
-void mbed_client_trace_ip6tos(const void *ip6addr, char *p)
+void mbed_trace_ip6tos(const void *ip6addr, char *p)
 {
     uint_fast8_t zero_start = 255, zero_len = 1;
     const uint8_t *addr = ip6addr;

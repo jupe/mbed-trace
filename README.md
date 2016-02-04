@@ -1,4 +1,4 @@
-# mbed-client-trace
+# mbed_trace
 
 A general purpose tracing abstraction library for mbed devices.
 
@@ -42,8 +42,11 @@ The purpose of the library is to provide a light, simple and general tracing sol
 ### Prerequisites
 
 * Initialize the serial port so that `stdout` works. You can verify that the serial port works using the `printf()` function.
- * if you want to redirect the traces somewhere else, see the [trace API](https://github.com/ARMmbed/mbed-client-trace/blob/master/mbed-client-trace/mbed_client_trace.h#L170).
-* Call the trace initialization (`mbed_client_trace_init`) once before using any other APIs. It allocates the trace buffer and initializes the internal variables.
+ * if you want to redirect the traces somewhere else, see the [trace API](https://github.com/ARMmbed/mbed_trace/blob/master/mbed_trace/mbed_trace.h#L170).
+* to activate traces, configure yotta with flag: `YOTTA_CFG_MBED_TRACE`
+ * By default trace uses 1024 bytes buffer for trace lines, but it can be configure by yotta with: `YOTTA_CFG_MBED_TRACE_LINE_LENGTH`. Default length: 1024.
+ * To disable ipv6 convertion, set `YOTTA_CFG_MBED_TRACE_FEA_IPV6 = 0` from yotta configurations.
+* Call the trace initialization (`mbed_trace_init`) once before using any other APIs. It allocates the trace buffer and initializes the internal variables.
 * Define `TRACE_GROUP` in your source code (not in the header!) to use traces. `TRACE_GROUP` is a 1-4 character long char-array (for example `#define TRACE_GROUP "APPL"`). This will be printed on every trace line.
 
 ### Traces
@@ -61,13 +64,13 @@ Available levels:
 Initialization (once in application lifetime):
 
 ```c
-int mbed_client_trace_init(void);
+int mbed_trace_init(void);
 ```
 
 Set output function, `printf` by default:
 
 ```c
-mbed_client_trace_print_function_set(printf)
+mbed_trace_print_function_set(printf)
 ```
 
 ### Helping functions
@@ -87,12 +90,12 @@ See more in [mbed_client_trace.h](https://github.com/ARMmbed/mbed-client-trace/b
 ## Usage example:
 
 ```c++
-#define YOTTA_CFG_MBED_CLIENT_TRACE //this can be defined also in the yotta configuration file config.yml
-#include "mbed_client_trace.h"
+#define YOTTA_CFG_MBED_TRACE //this can be defined also in the yotta configuration file config.yml
+#include "mbed_trace.h"
 #define TRACE_GROUP  "main"
 
 int main(void){
-    mbed_client_trace_init();       // initialize the trace library
+    mbed_trace_init();       // initialize the trace library
     tr_debug("this is debug msg");  //-> "[DBG ][main]: this is a debug msg"
     tr_err("this is error msg");    //-> "[ERR ][main]: this is an error msg"
     tr_warn("this is warning msg"); //-> "[WARN][main]: this is a warning msg"
@@ -110,11 +113,11 @@ To run unit tests
 * In Linux:
 ```
 yotta target x86-linux-native
-yotta test mbed_client_trace_test
+yotta test mbed_trace_test
 ```
 
 * In Windows:
 ```
 yotta target x86-windows-native
-yotta test mbed_client_trace_test
+yotta test mbed_trace_test
 ```

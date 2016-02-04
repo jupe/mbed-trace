@@ -4,20 +4,20 @@
 /**
  * \file \test_libTrace\Test.c
  *
- * \brief Unit tests for libTrace
+ * \brief Unit tests for mbed_trace
  */
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 
-
 #include "mbed-cpputest/CppUTest/TestHarness.h"
 #include "mbed-cpputest/CppUTest/SimpleString.h"
 #include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
 
-#define MBED_CLIENT_TRACE_FEA_IPV6 1
-#define YOTTA_CFG_MBED_CLIENT_TRACE
-#include "mbed-client-trace/mbed_client_trace.h"
+#define YOTTA_CFG_MBED_TRACE
+#define YOTTA_CFG_MBED_TRACE_FEA_IPV6 1
+
+#include "mbed_trace/mbed_trace.h"
 
 int main(int ac, char **av)
 {
@@ -35,13 +35,13 @@ TEST_GROUP(trace)
   void setup()
   {
 
-    mbed_client_trace_init();
-    mbed_client_trace_config_set(TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_ALL);
-    mbed_client_trace_print_function_set( myprint ); 
+    mbed_trace_init();
+    mbed_trace_config_set(TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_ALL);
+    mbed_trace_print_function_set( myprint ); 
   }
   void teardown()
   {
-    mbed_client_trace_free();
+    mbed_trace_free();
   }
 };
 
@@ -57,7 +57,7 @@ TEST(trace, LongString)
 {
   char longStr[1000] = {0x36};
   for(int i=0;i<999;i++) {longStr[i] = 0x36; }
-  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", longStr );
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", longStr );
 }
 
 TEST(trace, TooLong)
@@ -67,12 +67,12 @@ TEST(trace, TooLong)
   char longStr[TOO_LONG_SIZE] = {0};
   for(int i=0;i<TOO_LONG_SIZE;i++) { longStr[i] = 0x36; }  
   
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
-  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", longStr );
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", longStr );
   
   char shouldStr[TRACE_LINE_SIZE] = "[DBG ][mygr]: ";
   for(int i=14;i<TRACE_LINE_SIZE;i++) { shouldStr[i] = 0x36; }
-  shouldStr[TRACE_LINE_SIZE-1] = {0};
+  shouldStr[TRACE_LINE_SIZE-1] = 0;
   STRCMP_EQUAL(shouldStr, buf);
 }
 
@@ -80,11 +80,11 @@ TEST(trace, BufferResize)
 {
     uint8_t arr[20] = {0};
     memset(arr, '0', 20);
-    mbed_client_trace_buffer_sizes(0, 10);
+    mbed_trace_buffer_sizes(0, 10);
     STRCMP_EQUAL("30:30:30*", mbed_trace_array(arr, 20));
-    mbed_client_trace_buffer_sizes(0, 15);
+    mbed_trace_buffer_sizes(0, 15);
     STRCMP_EQUAL("30:30:30:30*", mbed_trace_array(arr, 20));
-    mbed_client_trace_buffer_sizes(0, 15);
+    mbed_trace_buffer_sizes(0, 15);
     STRCMP_EQUAL("30:30:30:30", mbed_trace_array(arr, 4));
 }
 
@@ -100,7 +100,7 @@ TEST(trace, ipv6)
 #endif
 TEST(trace, active_level_all_ipv6)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
   
   uint8_t arr[] = { 0x20, 0x01, 0xd, 0xb8, 0,0,0,0,0,1,0,0,0,0,0,1 };
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "my addr: %s", mbed_trace_ipv6(arr));
@@ -110,15 +110,15 @@ TEST(trace, active_level_all_ipv6)
 
 TEST(trace, change_levels)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG);
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("[DBG ][mygr]: hep", buf);
   
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG|TRACE_MODE_PLAIN);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG|TRACE_MODE_PLAIN);
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("hep", buf);
   
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG|TRACE_MODE_COLOR);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG|TRACE_MODE_COLOR);
   mbed_tracef(TRACE_LEVEL_ERROR, "mygr", "hep");
   STRCMP_EQUAL("\x1b[31m[ERR ][mygr]: hep\x1b[0m", buf);
   
@@ -126,7 +126,7 @@ TEST(trace, change_levels)
 
 TEST(trace, active_level_debug)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_DEBUG);
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("[DBG ][mygr]: hep", buf);
@@ -144,7 +144,7 @@ TEST(trace, active_level_debug)
 TEST(trace, active_level_info)
 {
   buf[0] = 0;
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_INFO);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_INFO);
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("", mbed_trace_last());
@@ -161,7 +161,7 @@ TEST(trace, active_level_info)
 
 TEST(trace, active_level_warn)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_WARN);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_WARN);
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("", mbed_trace_last());
@@ -178,7 +178,7 @@ TEST(trace, active_level_warn)
 
 TEST(trace, active_level_error)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ERROR);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ERROR);
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("", mbed_trace_last());
@@ -194,7 +194,7 @@ TEST(trace, active_level_error)
 }
 TEST(trace, active_level_none)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_NONE);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_NONE);
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hep");
   STRCMP_EQUAL("", mbed_trace_last());
@@ -211,8 +211,8 @@ TEST(trace, active_level_none)
 
 TEST(trace, active_level_all_1)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
-  mbed_client_trace_exclude_filters_set("mygr");
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_exclude_filters_set((char*)"mygr");
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygu", "hep");
   STRCMP_EQUAL("[DBG ][mygu]: hep", buf);
@@ -222,8 +222,8 @@ TEST(trace, active_level_all_1)
 }
 TEST(trace, active_level_all_2)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
-  mbed_client_trace_exclude_filters_set("mygr,mygu");
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_exclude_filters_set((char*)"mygr,mygu");
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygu", "hep");
   STRCMP_EQUAL("", mbed_trace_last());
@@ -233,8 +233,8 @@ TEST(trace, active_level_all_2)
 }
 TEST(trace, active_level_all_3)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
-  mbed_client_trace_include_filters_set("mygr");
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_include_filters_set((char*)"mygr");
   
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygu", "hep");
   STRCMP_EQUAL("", mbed_trace_last());
@@ -245,7 +245,7 @@ TEST(trace, active_level_all_3)
 
 TEST(trace, active_level_all_array)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
   
   uint8_t arr[] = {0x01, 0x02, 0x03};
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "my addr: %s", mbed_trace_array(arr, 3));
@@ -261,17 +261,17 @@ char* trace_prefix(size_t length){
 }
 TEST(trace, prefix)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
-  mbed_client_trace_prefix_function_set( &trace_prefix );
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_prefix_function_set( &trace_prefix );
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "test");
   STRCMP_EQUAL("[<TIME>][DBG ][mygr]: test", buf);
   //TEST_ASSERT_EQUAL_INT(4, time_length);
   
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL|TRACE_MODE_PLAIN);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL|TRACE_MODE_PLAIN);
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "test");
   STRCMP_EQUAL("test", buf);
   
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL|TRACE_MODE_COLOR);
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL|TRACE_MODE_COLOR);
   mbed_tracef(TRACE_LEVEL_ERROR, "mygr", "test");
   STRCMP_EQUAL("\x1b[31m[<TIME>][ERR ][mygr]: test\x1b[0m", buf);
 }
@@ -282,9 +282,9 @@ char* trace_suffix()
 }
 TEST(trace, suffix)
 {
-  mbed_client_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
-  mbed_client_trace_prefix_function_set( &trace_prefix );
-  mbed_client_trace_suffix_function_set( &trace_suffix );
+  mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
+  mbed_trace_prefix_function_set( &trace_prefix );
+  mbed_trace_suffix_function_set( &trace_suffix );
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "test");
   STRCMP_EQUAL("[<TIME>][DBG ][mygr]: test[END]", buf);
 }
@@ -298,4 +298,27 @@ TEST(trace, formatting)
     
     mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "HOH %d HAH %d %d %d %d %d", 12, 13, 5, 6, 8, 9);
     STRCMP_EQUAL("HOH 12 HAH 13 5 6 8 9", buf);
+}
+TEST(trace, filters_control)
+{
+    mbed_trace_include_filters_set((char*)"hello");
+    STRCMP_EQUAL("hello", mbed_trace_include_filters_get());
+    
+    mbed_trace_include_filters_set(0);
+    STRCMP_EQUAL("", mbed_trace_include_filters_get());
+    
+    mbed_trace_exclude_filters_set((char*)"hello");
+    STRCMP_EQUAL("hello", mbed_trace_exclude_filters_get());
+    
+    mbed_trace_exclude_filters_set(0);
+    STRCMP_EQUAL("", mbed_trace_exclude_filters_get());
+}
+TEST(trace, no_printer)
+{
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hello");
+    STRCMP_EQUAL("hello", buf);
+    
+    mbed_trace_print_function_set(NULL);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "this shoudnt be printed because printer is missing");
+    STRCMP_EQUAL("hello", buf);
 }

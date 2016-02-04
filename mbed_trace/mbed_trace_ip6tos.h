@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MBED_TRACE_IP6STRING_H
-#define MBED_TRACE_IP6STRING_H
+#ifndef MBED_TRACE_IP6TOS_H
+#define MBED_TRACE_IP6TOS_H
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,7 +26,7 @@ extern "C" {
  * \param ip6addr IPv6 address.
  * \p buffer to write string to.
  */
-void mbed_client_trace_ip6tos(const void *ip6addr, char *p);
+void mbed_trace_ip6tos(const void *ip6addr, char *p);
 
 
 #ifdef __cplusplus
