@@ -256,6 +256,8 @@ void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
 {
     m_trace.line[0] = 0; //by default trace is empty
     if (mbed_client_trace_skip(dlevel, grp) || fmt == 0 || grp == 0) {
+        //return tmp data pointer back to the beginning
+        mbed_trace_reset_tmp();
         return;
     }
     if ((m_trace.trace_config & TRACE_MASK_LEVEL) &  dlevel) {
@@ -447,7 +449,7 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
     if (str == NULL) {
         return "";
     }
-    if (bLeft < 43) {
+    if (bLeft < 45) {
         return "";
     }
 
