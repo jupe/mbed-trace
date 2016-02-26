@@ -270,8 +270,10 @@ void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
         if (plain == true || dlevel == TRACE_LEVEL_CMD) {
             va_list ap;
             va_start(ap, fmt);
-            //add trace data
-            retval = vsnprintf(ptr, bLeft, fmt, ap);
+            if( *fmt ) {
+                //add trace data
+                retval = vsnprintf(ptr, bLeft, fmt, ap);
+            }
             va_end(ap);
             if (dlevel == TRACE_LEVEL_CMD && m_trace.cmd_printf) {
                 m_trace.cmd_printf(m_trace.line);
