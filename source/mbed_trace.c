@@ -18,13 +18,14 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#ifndef YOTTA_CFG_MBED_CLIENT_TRACE
-#define YOTTA_CFG_MBED_CLIENT_TRACE
+#ifndef YOTTA_CFG_MBED_TRACE
+#define YOTTA_CFG_MBED_TRACE
+#define YOTTA_CFG_MBED_TRACE_FEA_IPV6 1
 #endif
 
-#include "mbed-client-trace/mbed_client_trace.h"
-#if MBED_CLIENT_TRACE_FEA_IPV6 == 1
-#include "mbed-client-trace/mbed_client_trace_ip6string.h"
+#include "mbed_trace/mbed_trace.h"
+#if YOTTA_CFG_MTRACE_FEA_IPV6 == 1
+#include "mbed_trace/mbed_trace_ip6tos.h"
 #endif
 
 #if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
@@ -50,11 +51,15 @@
 #define VT100_COLOR_DEBUG "\x1b[90m"
 
 /** default max trace line size in bytes */
+#ifdef YOTTA_CFG_MBED_TRACE_LINE_LENGTH
+#define DEFAULT_TRACE_LINE_LENGTH         YOTTA_CFG_MBED_TRACE_LINE_LENGTH
+#else
 #define DEFAULT_TRACE_LINE_LENGTH         1024
+#endif
 /** default max temporary buffer size in bytes, used in
     trace_ipv6, trace_array and trace_strn */
-#ifdef YOTTA_CFG_MBED_CLIENT_TRACE_TMP_LINE_LEN
-#define DEFAULT_TRACE_TMP_LINE_LEN        YOTTA_CFG_MBED_CLIENT_TRACE_TMP_LINE_LEN
+#ifdef YOTTA_CFG_MTRACE_TMP_LINE_LEN
+#define DEFAULT_TRACE_TMP_LINE_LEN        YOTTA_CFG_MTRACE_TMP_LINE_LEN
 #else
 #define DEFAULT_TRACE_TMP_LINE_LEN        128
 #endif
@@ -62,8 +67,8 @@
 #define DEFAULT_TRACE_FILTER_LENGTH       24
 
 /** default print function, just redirect str to printf */
-static void mbed_client_trace_realloc( char **buffer, int *length_ptr, int new_length);
-static void mbed_client_trace_default_print(const char *str);
+static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length);
+static void mbed_trace_default_print(const char *str);
 static void mbed_trace_reset_tmp(void);
 
 typedef struct trace_s {
@@ -107,7 +112,7 @@ static trace_t m_trace = {
     .cmd_printf = 0
 };
 
-int mbed_client_trace_init(void)
+int mbed_trace_init(void)
 {
     m_trace.trace_config = TRACE_MODE_COLOR | TRACE_ACTIVE_LEVEL_ALL | TRACE_CARRIAGE_RETURN;
     m_trace.line_length = DEFAULT_TRACE_LINE_LENGTH;
@@ -132,7 +137,7 @@ int mbed_client_trace_init(void)
             m_trace.filters_exclude == NULL  ||
             m_trace.filters_include == NULL) {
         //memory allocation fail
-        mbed_client_trace_free();
+        mbed_trace_free();
         return -1;
     }
     memset(m_trace.tmp_data, 0, m_trace.tmp_data_length);
@@ -142,12 +147,12 @@ int mbed_client_trace_init(void)
 
     m_trace.prefix_f = 0;
     m_trace.suffix_f = 0;
-    m_trace.printf = mbed_client_trace_default_print;
+    m_trace.printf = mbed_trace_default_print;
     m_trace.cmd_printf = 0;
 
     return 0;
 }
-void mbed_client_trace_free(void)
+void mbed_trace_free(void)
 {
     MEM_FREE(m_trace.line);
     m_trace.line_length = 0;
@@ -162,50 +167,50 @@ void mbed_client_trace_free(void)
     m_trace.filters_length = 0;
     m_trace.prefix_f = 0;
     m_trace.suffix_f = 0;
-    m_trace.printf = mbed_client_trace_default_print;
+    m_trace.printf = mbed_trace_default_print;
     m_trace.cmd_printf = 0;
 }
-static void mbed_client_trace_realloc( char **buffer, int *length_ptr, int new_length)
+static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length)
 {
     MEM_FREE(*buffer);
     *buffer  = MEM_ALLOC(new_length);
     *length_ptr = new_length;
 }
-void mbed_client_trace_buffer_sizes(int lineLength, int tmpLength)
+void mbed_trace_buffer_sizes(int lineLength, int tmpLength)
 {
     if( lineLength > 0 ) {
-        mbed_client_trace_realloc( &(m_trace.line), &m_trace.line_length, lineLength );
+        mbed_trace_realloc( &(m_trace.line), &m_trace.line_length, lineLength );
     }
     if( tmpLength > 0 ) {
-        mbed_client_trace_realloc( &(m_trace.tmp_data), &m_trace.tmp_data_length, tmpLength);
+        mbed_trace_realloc( &(m_trace.tmp_data), &m_trace.tmp_data_length, tmpLength);
         mbed_trace_reset_tmp();
     }
 }
-void mbed_client_trace_config_set(uint8_t config)
+void mbed_trace_config_set(uint8_t config)
 {
     m_trace.trace_config = config;
 }
-uint8_t mbed_client_trace_config_get(void)
+uint8_t mbed_trace_config_get(void)
 {
     return m_trace.trace_config;
 }
-void mbed_client_trace_prefix_function_set(char *(*pref_f)(size_t))
+void mbed_trace_prefix_function_set(char *(*pref_f)(size_t))
 {
     m_trace.prefix_f = pref_f;
 }
-void mbed_client_trace_suffix_function_set(char *(*suffix_f)(void))
+void mbed_trace_suffix_function_set(char *(*suffix_f)(void))
 {
     m_trace.suffix_f = suffix_f;
 }
-void mbed_client_trace_print_function_set(void (*printf)(const char *))
+void mbed_trace_print_function_set(void (*printf)(const char *))
 {
     m_trace.printf = printf;
 }
-void mbed_client_trace_cmdprint_function_set(void (*printf)(const char *))
+void mbed_trace_cmdprint_function_set(void (*printf)(const char *))
 {
     m_trace.cmd_printf = printf;
 }
-void mbed_client_trace_exclude_filters_set(char *filters)
+void mbed_trace_exclude_filters_set(char *filters)
 {
     if (filters) {
         (void)strncpy(m_trace.filters_exclude, filters, m_trace.filters_length);
@@ -213,15 +218,15 @@ void mbed_client_trace_exclude_filters_set(char *filters)
         m_trace.filters_exclude[0] = 0;
     }
 }
-const char *mbed_client_trace_exclude_filters_get(void)
+const char *mbed_trace_exclude_filters_get(void)
 {
     return m_trace.filters_exclude;
 }
-const char *mbed_client_trace_include_filters_get(void)
+const char *mbed_trace_include_filters_get(void)
 {
     return m_trace.filters_include;
 }
-void mbed_client_trace_include_filters_set(char *filters)
+void mbed_trace_include_filters_set(char *filters)
 {
     if (filters) {
         (void)strncpy(m_trace.filters_include, filters, m_trace.filters_length);
@@ -229,7 +234,7 @@ void mbed_client_trace_include_filters_set(char *filters)
         m_trace.filters_include[0] = 0;
     }
 }
-static int8_t mbed_client_trace_skip(int8_t dlevel, const char *grp)
+static int8_t mbed_trace_skip(int8_t dlevel, const char *grp)
 {
     if (dlevel >= 0 && grp != 0) {
         // filter debug prints only when dlevel is >0 and grp is given
@@ -248,14 +253,15 @@ static int8_t mbed_client_trace_skip(int8_t dlevel, const char *grp)
     }
     return 0;
 }
-static void mbed_client_trace_default_print(const char *str)
+static void mbed_trace_default_print(const char *str)
 {
     puts(str);
 }
 void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
 {
     m_trace.line[0] = 0; //by default trace is empty
-    if (mbed_client_trace_skip(dlevel, grp) || fmt == 0 || grp == 0) {
+
+    if (mbed_trace_skip(dlevel, grp) || fmt == 0 || grp == 0 || !m_trace.printf) {
         //return tmp data pointer back to the beginning
         mbed_trace_reset_tmp();
         return;
@@ -400,8 +406,9 @@ void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
                     retval = 0;
                 }
                 if (retval > 0) {
-                    ptr += retval;
-                    bLeft -= retval;
+                    // not used anymore
+                    //ptr += retval;
+                    //bLeft -= retval;
                 }
             }
             //print out whole data
@@ -421,7 +428,7 @@ const char *mbed_trace_last(void)
 }
 /* Helping functions */
 #define tmp_data_left()  m_trace.tmp_data_length-(m_trace.tmp_data_ptr-m_trace.tmp_data)
-#if MBED_CLIENT_TRACE_FEA_IPV6 == 1
+#if YOTTA_CFG_MTRACE_FEA_IPV6 == 1
 char *mbed_trace_ipv6(const void *addr_ptr)
 {
     char *str = m_trace.tmp_data_ptr;
@@ -435,7 +442,7 @@ char *mbed_trace_ipv6(const void *addr_ptr)
         return "<null>";
     }
     str[0] = 0;
-    mbed_client_trace_ip6tos(addr_ptr, str);
+    mbed_trace_ip6tos(addr_ptr, str);
     m_trace.tmp_data_ptr += strlen(str) + 1;
     return str;
 }
@@ -461,10 +468,10 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
         bitcopy(addr, prefix, prefix_len);
 #else
         return "";
-#endif    
+#endif  //COMMON_FUNCTIONS_FN
     }
 
-    mbed_client_trace_ip6tos(addr, tmp);
+    mbed_trace_ip6tos(addr, tmp);
     retval = snprintf(str, bLeft, "%s/%u", tmp, prefix_len);
     if (retval <= 0 || retval > bLeft) {
         return "";
@@ -473,10 +480,10 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
     m_trace.tmp_data_ptr += retval + 1;
     return str;
 }
-#endif
+#endif //YOTTA_CFG_MTRACE_FEA_IPV6
 char *mbed_trace_array(const uint8_t *buf, uint16_t len)
 {
-    int i, retval, bLeft = tmp_data_left();
+    int i, bLeft = tmp_data_left();
     char *str, *wptr;
     str = m_trace.tmp_data_ptr;
     if (str == NULL || bLeft == 0) {
@@ -494,7 +501,7 @@ char *mbed_trace_array(const uint8_t *buf, uint16_t len)
             overflow = 1;
             break;
         }
-        retval = snprintf(wptr, bLeft, "%02x:", *ptr++);
+        int retval = snprintf(wptr, bLeft, "%02x:", *ptr++);
         if (retval <= 0 || retval > bLeft) {
             break;
         }

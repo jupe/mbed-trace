@@ -1,19 +1,21 @@
 {
-  "name": "mbed-client-trace",
-  "version": "0.1.1",
+  "name": "mbed_trace",
+  "version": "0.2.0",
   "description": "Trace library for mbed devices",
   "keywords": [
     "trace",
     "debug",
     "library",
-    "client"
+    "client",
+    "mbedOS",
+    "mbed"
   ],
   "author": "Jussi Vatjus-Anttila",
   "repository": {
-    "url": "https://github.com/ARMmbed/mbed-client-trace.git",
+    "url": "https://github.com/ARMmbed/mbed_trace.git",
     "type": "git"
   },
-  "homepage": "https://github.com/ARMmbed/mbed-client-trace",
+  "homepage": "https://github.com/ARMmbed/mbed_trace",
   "licenses": [
     {
       "url": "https://spdx.org/licenses/Apache-2.0",
