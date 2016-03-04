@@ -17,7 +17,7 @@
 #define YOTTA_CFG_MBED_TRACE
 #define YOTTA_CFG_MBED_TRACE_FEA_IPV6 1
 
-#include "mbed_trace/mbed_trace.h"
+#include "mbed-trace/mbed_trace.h"
 
 int main(int ac, char **av)
 {

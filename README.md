@@ -1,4 +1,4 @@
-# mbed_trace
+# mbed-trace
 
 A general purpose tracing abstraction library for mbed devices.
 
@@ -42,7 +42,7 @@ The purpose of the library is to provide a light, simple and general tracing sol
 ### Prerequisites
 
 * Initialize the serial port so that `stdout` works. You can verify that the serial port works using the `printf()` function.
- * if you want to redirect the traces somewhere else, see the [trace API](https://github.com/ARMmbed/mbed_trace/blob/master/mbed_trace/mbed_trace.h#L170).
+ * if you want to redirect the traces somewhere else, see the [trace API](https://github.com/ARMmbed/mbed-trace/blob/master/mbed-trace/mbed_trace.h#L170).
 * to activate traces, configure yotta with flag: `YOTTA_CFG_MBED_TRACE`
  * By default trace uses 1024 bytes buffer for trace lines, but it can be configure by yotta with: `YOTTA_CFG_MBED_TRACE_LINE_LENGTH`. Default length: 1024.
  * To disable ipv6 convertion, set `YOTTA_CFG_MBED_TRACE_FEA_IPV6 = 0` from yotta configurations.
@@ -84,14 +84,14 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
 char *mbed_trace_array(const uint8_t *buf, uint16_t len)
 ```
 
-See more in [mbed_client_trace.h](https://github.com/ARMmbed/mbed-client-trace/blob/master/mbed-client-trace/mbed_client_trace.h).
+See more in [mbed_trace.h](https://github.com/ARMmbed/mbed-trace/blob/master/mbed-trace/mbed_trace.h).
 
 
 ## Usage example:
 
 ```c++
 #define YOTTA_CFG_MBED_TRACE //this can be defined also in the yotta configuration file config.yml
-#include "mbed_trace.h"
+#include "mbed-trace/mbed_trace.h"
 #define TRACE_GROUP  "main"
 
 int main(void){

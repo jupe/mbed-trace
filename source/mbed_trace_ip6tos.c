@@ -15,7 +15,7 @@
  */
 #include <stdio.h>
 #include <inttypes.h>
-#include "mbed_trace/mbed_trace_ip6tos.h"
+#include "mbed-trace/mbed_trace_ip6tos.h"
 
 /**
  * Print binary IPv6 address to a string.

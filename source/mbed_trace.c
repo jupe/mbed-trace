@@ -23,9 +23,9 @@
 #define YOTTA_CFG_MBED_TRACE_FEA_IPV6 1
 #endif
 
-#include "mbed_trace/mbed_trace.h"
+#include "mbed-trace/mbed_trace.h"
 #if YOTTA_CFG_MTRACE_FEA_IPV6 == 1
-#include "mbed_trace/mbed_trace_ip6tos.h"
+#include "mbed-trace/mbed_trace_ip6tos.h"
 #endif
 
 #if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)

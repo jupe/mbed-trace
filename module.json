@@ -1,5 +1,5 @@
 {
-  "name": "mbed_trace",
+  "name": "mbed-trace",
   "version": "0.2.0",
   "description": "Trace library for mbed devices",
   "keywords": [
@@ -12,10 +12,10 @@
   ],
   "author": "Jussi Vatjus-Anttila",
   "repository": {
-    "url": "https://github.com/ARMmbed/mbed_trace.git",
+    "url": "https://github.com/ARMmbed/mbed-trace.git",
     "type": "git"
   },
-  "homepage": "https://github.com/ARMmbed/mbed_trace",
+  "homepage": "https://github.com/ARMmbed/mbed-trace",
   "licenses": [
     {
       "url": "https://spdx.org/licenses/Apache-2.0",
