@@ -7,7 +7,7 @@ if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE OR DEFINED TARGET_LIKE_X86_LINUX_NATIV
     include_directories("../yotta_modules/cpputest")
     
     # describe what the test executable needs to link with
-    target_link_libraries(mbed_trace_test "mbed_trace" cpputest)
+    target_link_libraries(mbed_trace_test "mbed-trace" cpputest)
     
     # describe what is actual test binary
     if(DEFINED TARGET_LIKE_X86_WINDOWS_NATIVE)
