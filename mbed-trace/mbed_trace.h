@@ -112,6 +112,20 @@ extern "C" {
 /** Possible to skip all traces in compile time */
 #if defined(YOTTA_CFG_MBED_TRACE)
 
+/**
+ * Allow specification of default TRACE_GROUP to be used if not specified by application
+ */
+
+#ifndef TRACE_GROUP
+#ifdef YOTTA_CFG_MBED_TRACE_GROUP
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#define TRACE_GROUP STR(YOTTA_CFG_MBED_TRACE_GROUP)
+#else
+#define TRACE_GROUP "APPL"
+#endif
+#endif
+
 #if defined(__GNUC__) || defined(__CC_ARM)
 /**
  * Initialize trace functionality
