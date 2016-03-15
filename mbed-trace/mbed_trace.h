@@ -110,7 +110,21 @@ extern "C" {
 #define tr_cmdline(...)         mbed_tracef(TRACE_LEVEL_CMD,     TRACE_GROUP, __VA_ARGS__)   //!< Special print for cmdline. See more from TRACE_LEVEL_CMD -level
 
 /** Possible to skip all traces in compile time */
-#if defined(YOTTA_CFG_MBED_TRACE)
+#if defined(YOTTA_CFG_MBED_TRACE) || (defined(YOTTA_CFG) && !defined(NDEBUG))
+
+/**
+ * Allow specification of default TRACE_GROUP to be used if not specified by application
+ */
+
+#ifndef TRACE_GROUP
+#ifdef YOTTA_CFG_MBED_TRACE_GROUP
+#define TRACE_GROUP_STR_HELPER(x) #x
+#define TRACE_GROUP_STR(x) TRACE_GROUP_STR_HELPER(x)
+#define TRACE_GROUP TRACE_GROUP_STR(YOTTA_CFG_MBED_TRACE_GROUP)
+#else
+#define TRACE_GROUP "APPL"
+#endif
+#endif
 
 #if defined(__GNUC__) || defined(__CC_ARM)
 /**
