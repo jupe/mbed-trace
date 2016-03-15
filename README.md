@@ -26,7 +26,7 @@ The purpose of the library is to provide a light, simple and general tracing sol
 * The trace function uses `stdout` as the default output target because it goes directly to serial port when initialized. 
 * The trace function produces traces like: `[<levl>][grp ]: msg`. This provides an easy way to detect trace prints and separate traces from normal prints (for example with _regex_).
 * This approach requires a `sprintf` implementation (`stdio.h`). The memory consumption is pretty high, but it allows an efficient way to format traces.
-* The solution is not Thread safe. (Sorry, but the current implementation does not have mutexes. PRs are more than welcome.)
+* The solution is not Thread nor Interrupt safe. (Sorry, but the current implementation does not have mutexes. PRs are more than welcome.)
 
 ## Examples of traces
 

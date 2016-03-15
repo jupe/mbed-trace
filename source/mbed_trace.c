@@ -28,21 +28,11 @@
 #include "mbed-trace/mbed_trace_ip6tos.h"
 #endif
 
-#if defined(_WIN32) || defined(__unix__) || defined(__unix) || defined(unix) || defined(YOTTA_CFG)
 #ifndef MEM_ALLOC
 #define MEM_ALLOC malloc
 #endif
 #ifndef MEM_FREE
 #define MEM_FREE free
-#endif
-#else // _WIN32|__unix__|__unix|unix
-#include "nsdynmemLIB.h"
-#ifndef MEM_ALLOC
-#define MEM_ALLOC ns_dyn_mem_alloc
-#endif
-#ifndef MEM_FREE
-#define MEM_FREE ns_dyn_mem_free
-#endif
 #endif
 
 #define VT100_COLOR_ERROR "\x1b[31m"
