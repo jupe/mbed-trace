@@ -121,8 +121,6 @@ extern "C" {
 #define TRACE_GROUP_STR_HELPER(x) #x
 #define TRACE_GROUP_STR(x) TRACE_GROUP_STR_HELPER(x)
 #define TRACE_GROUP TRACE_GROUP_STR(YOTTA_CFG_MBED_TRACE_GROUP)
-#else
-#define TRACE_GROUP "APPL"
 #endif
 #endif
 
