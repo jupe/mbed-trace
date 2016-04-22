@@ -422,7 +422,7 @@ const char *mbed_trace_last(void)
 }
 /* Helping functions */
 #define tmp_data_left()  m_trace.tmp_data_length-(m_trace.tmp_data_ptr-m_trace.tmp_data)
-#if YOTTA_CFG_MTRACE_FEA_IPV6 == 1
+#if YOTTA_CFG_MBED_TRACE_FEA_IPV6 == 1
 char *mbed_trace_ipv6(const void *addr_ptr)
 {
     char *str = m_trace.tmp_data_ptr;
@@ -474,7 +474,7 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
     m_trace.tmp_data_ptr += retval + 1;
     return str;
 }
-#endif //YOTTA_CFG_MTRACE_FEA_IPV6
+#endif //YOTTA_CFG_MBED_TRACE_FEA_IPV6
 char *mbed_trace_array(const uint8_t *buf, uint16_t len)
 {
     int i, bLeft = tmp_data_left();
