@@ -276,7 +276,9 @@ char* mbed_trace_array(const uint8_t* buf, uint16_t len);
 #else // defined(__GNUC__) || defined(__CC_ARM)
 int  mbed_trace_init( void );
 void mbed_trace_free( void );
+void mbed_trace_buffer_sizes(int lineLength, int tmpLength);
 void mbed_trace_config_set(uint8_t config);
+uint8_t mbed_trace_config_get(void);
 void mbed_trace_prefix_function_set( char* (*pref_f)(size_t) );
 void mbed_trace_suffix_function_set(char* (*suffix_f)(void) );
 void mbed_trace_print_function_set( void (*print_f)(const char*) );
@@ -301,11 +303,14 @@ char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
 // trace functionality not supported
 #define mbed_trace_init(...)                ((void) 0)
 #define mbed_trace_free(...)                ((void) 0)
+#define mbed_trace_buffer_sizes(...)        ((void) 0)
 #define mbed_trace_config_set(...)          ((void) 0)
+#define mbed_trace_config_get(...)          ((void) 0)
 #define mbed_trace_prefix_function_set(...) ((void) 0)
 #define mbed_trace_suffix_function_set(...) ((void) 0)
 #define mbed_trace_print_function_set(...)  ((void) 0)
 #define mbed_trace_cmdprint_function_set(...)  ((void) 0)
+#define mbed_trace_exclude_filters_set(...) ((void) 0)
 #define mbed_trace_exclude_filters_get(...) ((void) 0)
 #define mbed_trace_include_filters_set(...) ((void) 0)
 #define mbed_trace_include_filters_get(...) ((void) 0)
