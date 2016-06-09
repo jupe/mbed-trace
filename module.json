@@ -22,4 +22,7 @@
       "type": "Apache-2.0"
     }
   ]
+  "dependencies": {
+    "nanostack-libservice": "^3.4.0"
+  }
 }

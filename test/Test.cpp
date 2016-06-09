@@ -23,13 +23,28 @@ int main(int ac, char **av)
 {
     return CommandLineTestRunner::RunAllTests(ac, av);
 }
+
+static int mutex_wait_count = 0;
+static int mutex_release_count = 0;
+static bool check_mutex_lock_status = true;
+void my_mutex_wait()
+{
+  mutex_wait_count++;
+}
+void my_mutex_release()
+{
+  mutex_release_count++;
+}
+
 char buf[1024];
 #include <stdio.h>
 void myprint(const char* str)
 {
+  if ( check_mutex_lock_status ) {
+      CHECK( (mutex_wait_count - mutex_release_count) > 0 );
+  }
   strcpy(buf, str);
 }
-
 TEST_GROUP(trace)
 {
   void setup()
@@ -37,15 +52,37 @@ TEST_GROUP(trace)
 
     mbed_trace_init();
     mbed_trace_config_set(TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_ALL);
-    mbed_trace_print_function_set( myprint ); 
+    mbed_trace_print_function_set( myprint );
+    mbed_trace_mutex_wait_function_set( my_mutex_wait );
+    mbed_trace_mutex_release_function_set( my_mutex_release );
   }
   void teardown()
   {
+    CHECK(mutex_wait_count == mutex_release_count); // Check the mutex count with every test
     mbed_trace_free();
   }
 };
 
 /* Unity test code starts */
+TEST(trace, MutexNotSet)
+{
+  mbed_trace_mutex_wait_function_set( 0 );
+  mbed_trace_mutex_release_function_set( 0 );
+  int mutex_call_count_at_entry = mutex_wait_count;
+  check_mutex_lock_status = false;
+
+  char expectedStr[] = "Hello hello!";
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "Hello hello!");
+  STRCMP_EQUAL(expectedStr, buf);
+
+  CHECK( mutex_call_count_at_entry == mutex_wait_count );
+  CHECK( mutex_call_count_at_entry == mutex_release_count );
+
+  mbed_trace_mutex_wait_function_set( my_mutex_wait );
+  mbed_trace_mutex_release_function_set( my_mutex_release );
+  check_mutex_lock_status = true;
+}
+
 TEST(trace, Array)
 {
   unsigned char longStr[200] = {0x66};
@@ -62,7 +99,7 @@ TEST(trace, LongString)
 
 TEST(trace, TooLong)
 {
-  #define TOO_LONG_SIZE 10000
+  #define TOO_LONG_SIZE 9400
   #define TRACE_LINE_SIZE 1024
   char longStr[TOO_LONG_SIZE] = {0};
   for(int i=0;i<TOO_LONG_SIZE;i++) { longStr[i] = 0x36; }  
@@ -86,27 +123,60 @@ TEST(trace, BufferResize)
     STRCMP_EQUAL("30:30:30:30*", mbed_trace_array(arr, 20));
     mbed_trace_buffer_sizes(0, 15);
     STRCMP_EQUAL("30:30:30:30", mbed_trace_array(arr, 4));
+
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
 }
 
-#if MBED_CLIENT_TRACE_FEA_IPV6 == 1
-#ifdef COMMON_FUNCTIONS_FN
+#if YOTTA_CFG_MBED_TRACE_FEA_IPV6 == 1
+const char *ip6tos_output_string;
+uint8_t ip6tos_input_array[16];
+
 TEST(trace, ipv6)
 {
     uint8_t prefix[] = { 0x14, 0x6e, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00 };
     int prefix_len = 64;
+    ip6tos_output_string = "146e:a00::";
     char *str = mbed_trace_ipv6_prefix(prefix, prefix_len);
+    CHECK(memcmp(ip6tos_input_array, prefix, 8) == 0);
     STRCMP_EQUAL("146e:a00::/64", str);
+
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
 }
-#endif
+
 TEST(trace, active_level_all_ipv6)
 {
   mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
   
   uint8_t arr[] = { 0x20, 0x01, 0xd, 0xb8, 0,0,0,0,0,1,0,0,0,0,0,1 };
+  ip6tos_output_string = "2001:db8::1:0:0:1";
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "my addr: %s", mbed_trace_ipv6(arr));
+  CHECK(memcmp(ip6tos_input_array, arr, 16) == 0);
   STRCMP_EQUAL("[DBG ][mygr]: my addr: 2001:db8::1:0:0:1", buf);
 }
-#endif
+#endif //YOTTA_CFG_MBED_TRACE_FEA_IPV6
+
+TEST(trace, config_change)
+{
+    mbed_trace_config_set(TRACE_MODE_COLOR|TRACE_ACTIVE_LEVEL_ALL);
+    CHECK(mbed_trace_config_get() == TRACE_MODE_COLOR|TRACE_ACTIVE_LEVEL_ALL);
+    mbed_trace_config_set(TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_NONE);
+    CHECK(mbed_trace_config_get() == TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_NONE);
+    mbed_trace_config_set(TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_ALL);
+    CHECK(mbed_trace_config_get() == TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_ALL);
+}
+
+TEST(trace, active_level_all_color)
+{
+  mbed_trace_config_set(TRACE_MODE_COLOR|TRACE_ACTIVE_LEVEL_ALL);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "hello");
+  STRCMP_EQUAL("\x1b[90m[DBG ][mygr]: hello\x1b[0m", buf);
+  mbed_tracef(TRACE_LEVEL_INFO, "mygr", "to one");
+  STRCMP_EQUAL("\x1b[39m[INFO][mygr]: to one\x1b[0m", buf);
+  mbed_tracef(TRACE_LEVEL_WARN, "mygr", "and all");
+  STRCMP_EQUAL("\x1b[33m[WARN][mygr]: and all\x1b[0m", buf);
+  mbed_tracef(TRACE_LEVEL_ERROR, "mygr", "even you");
+  STRCMP_EQUAL("\x1b[31m[ERR ][mygr]: even you\x1b[0m", buf);
+}
 
 TEST(trace, change_levels)
 {
