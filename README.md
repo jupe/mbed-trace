@@ -27,7 +27,7 @@ The purpose of the library is to provide a light, simple and general tracing sol
 * The trace function produces traces like: `[<levl>][grp ]: msg`. This provides an easy way to detect trace prints and separate traces from normal prints (for example with _regex_).
 * This approach requires a `sprintf` implementation (`stdio.h`). The memory consumption is pretty high, but it allows an efficient way to format traces.
 * The solution is not Interrupt safe. (PRs are more than welcome.)
-* The solution is not Thread safe by default. Thread safety can be enabled by providing wait and release callback functions that use mutexes defined by the application. 
+* The solution is not Thread safe by default. Thread safety for the actual trace calls can be enabled by providing wait and release callback functions that use mutexes defined by the application. 
 
 ## Examples of traces
 
@@ -47,6 +47,7 @@ The purpose of the library is to provide a light, simple and general tracing sol
 * to activate traces, configure yotta with flag: `YOTTA_CFG_MBED_TRACE` set to 1 or true. Setting the flag to 0 or false disables tracing.
  * By default trace uses 1024 bytes buffer for trace lines, but it can be configure by yotta with: `YOTTA_CFG_MBED_TRACE_LINE_LENGTH`. Default length: 1024.
  * To disable ipv6 convertion, set `YOTTA_CFG_MBED_TRACE_FEA_IPV6 = 0` from yotta configurations.
+* If thread safety is needed, configure the wait and release callback functions before initialization so that the protection is in place as soon as the library is initialized. This should usually only be done once in the application's lifetime.
 * Call the trace initialization (`mbed_trace_init`) once before using any other APIs. It allocates the trace buffer and initializes the internal variables.
 * Define `TRACE_GROUP` in your source code (not in the header!) to use traces. `TRACE_GROUP` is a 1-4 character long char-array (for example `#define TRACE_GROUP "APPL"`). This will be printed on every trace line.
 
@@ -62,6 +63,13 @@ Available levels:
 * info
 * cmdline (special behavior, should not be used)
 
+Set mutex wait and release functions, if thread safety is needed. Do this before initialization so the functions are immediately available:
+
+```c
+mbed_trace_mutex_wait_function_set(my_mutex_wait);
+mbed_trace_mutex_release_function_set(my_mutex_release);
+```
+
 Initialization (once in application lifetime):
 
 ```c
@@ -72,12 +80,6 @@ Set output function, `printf` by default:
 
 ```c
 mbed_trace_print_function_set(printf)
-```
-
-Set mutex wait and release functions, if thread safety is needed
-```c
-mbed_trace_mutex_wait_function_set(my_mutex_wait);
-mbed_trace_mutex_release_function_set(my_mutex_release);
 ```
 
 ### Helping functions
@@ -114,9 +116,9 @@ static void my_mutex_release()
 }
 
 int main(void){
-    mbed_trace_init();       // initialize the trace library
     mbed_trace_mutex_wait_function_set( my_mutex_wait ); // only if thread safety is needed
     mbed_trace_mutex_release_function_set( my_mutex_release ); // only if thread safety is needed
+    mbed_trace_init();       // initialize the trace library
     tr_debug("this is debug msg");  //-> "[DBG ][main]: this is a debug msg"
     tr_err("this is error msg");    //-> "[ERR ][main]: this is an error msg"
     tr_warn("this is warning msg"); //-> "[WARN][main]: this is a warning msg"
