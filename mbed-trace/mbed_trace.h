@@ -18,8 +18,8 @@
  * \file mbed_trace.h
  * Trace interface for MbedOS applications.
  * This file provide simple but flexible way to handle software traces.
- * Trace library are abstract layer, which use stdout (printf) by default, 
- * but outputs can be easily redirect to custom function, for example to 
+ * Trace library are abstract layer, which use stdout (printf) by default,
+ * but outputs can be easily redirect to custom function, for example to
  * store traces to memory or other interfaces.
  *
  *  usage example:
@@ -38,6 +38,7 @@
  * \endcode
  * Activate with compiler flag: YOTTA_CFG_MBED_TRACE
  * Configure trace line buffer size with compiler flag: YOTTA_CFG_MBED_TRACE_LINE_LENGTH. Default length: 1024.
+ * Limit the size of flash by setting MBED_TRACE_MAX_LEVEL value. Default is TRACE_LEVEL_DEBUG (all included)
  *
  */
 #ifndef MBED_TRACE_H_
@@ -110,13 +111,39 @@ extern "C" {
 /** special level for cmdline. Behaviours like "plain mode" */
 #define TRACE_LEVEL_CMD           0x01
 
+#ifndef MBED_TRACE_MAX_LEVEL
+#define MBED_TRACE_MAX_LEVEL TRACE_LEVEL_DEBUG
+#endif
+
 //usage macros:
-#define tr_info(...)            mbed_tracef(TRACE_LEVEL_INFO,    TRACE_GROUP, __VA_ARGS__)   //!< Print info message
+#if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_DEBUG
 #define tr_debug(...)           mbed_tracef(TRACE_LEVEL_DEBUG,   TRACE_GROUP, __VA_ARGS__)   //!< Print debug message
+#else
+#define tr_debug(...)
+#endif
+
+#if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_INFO
+#define tr_info(...)            mbed_tracef(TRACE_LEVEL_INFO,    TRACE_GROUP, __VA_ARGS__)   //!< Print info message
+#else
+#define tr_info(...)
+#endif
+
+#if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_WARN
 #define tr_warning(...)         mbed_tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Print warning message
 #define tr_warn(...)            mbed_tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Alternative warning message
+#else
+#define tr_warning(...)
+#define tr_warn(...)
+#endif
+
+#if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_ERROR
 #define tr_error(...)           mbed_tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Print Error Message
 #define tr_err(...)             mbed_tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Alternative error message
+#else
+#define tr_error(...)
+#define tr_err(...)
+#endif
+
 #define tr_cmdline(...)         mbed_tracef(TRACE_LEVEL_CMD,     TRACE_GROUP, __VA_ARGS__)   //!< Special print for cmdline. See more from TRACE_LEVEL_CMD -level
 
 //aliases for the most commonly used functions and the helper functions
@@ -180,7 +207,7 @@ void mbed_trace_buffer_sizes(int lineLength, int tmpLength);
  * @endcode
  */
 void mbed_trace_config_set(uint8_t config);
-/** get trace configurations 
+/** get trace configurations
  * @return trace configuration byte
  */
 uint8_t mbed_trace_config_get(void);
@@ -232,7 +259,7 @@ void mbed_trace_mutex_release_function_set(void (*mutex_release_f)(void));
 /**
  * When trace group contains text in filters,
  * trace print will be ignored.
- * e.g.: 
+ * e.g.:
  *  mbed_trace_exclude_filters_set("mygr");
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "ougr", "This is not printed");
  */
@@ -327,7 +354,7 @@ char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
  * @param buf  hex array pointer
  * @param len  buffer length
  * @return temporary buffer where string copied
- * if array as string not fit to temp buffer, this function write '*' as last character, 
+ * if array as string not fit to temp buffer, this function write '*' as last character,
  * which indicate that buffer is too small for array.
  */
 char* mbed_trace_array(const uint8_t* buf, uint16_t len);
