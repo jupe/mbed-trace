@@ -18,7 +18,7 @@
 #include <stdarg.h>
 
 #ifndef YOTTA_CFG_MBED_TRACE
-#define YOTTA_CFG_MBED_TRACE
+#define YOTTA_CFG_MBED_TRACE 1
 #define YOTTA_CFG_MBED_TRACE_FEA_IPV6 1
 #endif
 
@@ -58,8 +58,11 @@
 #define DEFAULT_TRACE_LINE_LENGTH         1024
 #endif
 /** default max temporary buffer size in bytes, used in
-    trace_ipv6, trace_array and trace_strn */
-#ifdef YOTTA_CFG_MTRACE_TMP_LINE_LEN
+    trace_ipv6, trace_ipv6_prefix and trace_array */
+#ifdef YOTTA_CFG_MBED_TRACE_TMP_LINE_LEN
+#define DEFAULT_TRACE_TMP_LINE_LEN        YOTTA_CFG_MBED_TRACE_TMP_LINE_LEN
+#elif defined YOTTA_CFG_MTRACE_TMP_LINE_LEN
+#warning The YOTTA_CFG_MTRACE_TMP_LINE_LEN flag is deprecated! Use YOTTA_CFG_MBED_TRACE_TMP_LINE_LEN instead.
 #define DEFAULT_TRACE_TMP_LINE_LEN        YOTTA_CFG_MTRACE_TMP_LINE_LEN
 #else
 #define DEFAULT_TRACE_TMP_LINE_LEN        128
@@ -159,9 +162,6 @@ int mbed_trace_init(void)
     m_trace.suffix_f = 0;
     m_trace.printf = mbed_trace_default_print;
     m_trace.cmd_printf = 0;
-    m_trace.mutex_wait_f = 0;
-    m_trace.mutex_release_f = 0;
-    m_trace.mutex_lock_count = 0;
 
     return 0;
 }
@@ -454,9 +454,20 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
 
 end:
     if ( m_trace.mutex_release_f ) {
-        for ( ;m_trace.mutex_lock_count > 0; m_trace.mutex_lock_count-- ) {
+        // Store the mutex lock count to temp variable so that it won't get
+        // clobbered during last loop iteration when mutex gets released
+        int count = m_trace.mutex_lock_count;
+        m_trace.mutex_lock_count = 0;
+        // Since the helper functions (eg. mbed_trace_array) are used like this:
+        //   mbed_tracef(TRACE_LEVEL_INFO, "grp", "%s", mbed_trace_array(some_array))
+        // The helper function MUST acquire the mutex if it modifies any buffers. However
+        // it CANNOT unlock the mutex because that would allow another thread to acquire
+        // the mutex after helper function unlocks it and before mbed_tracef acquires it
+        // for itself. This means that here we have to unlock the mutex as many times
+        // as it was acquired by trace function and any possible helper functions.
+        do {
             m_trace.mutex_release_f();
-        }
+        } while (--count > 0);
     }
 }
 static void mbed_trace_reset_tmp(void)
@@ -488,8 +499,7 @@ char *mbed_trace_ipv6(const void *addr_ptr)
         return "<null>";
     }
     str[0] = 0;
-    ip6tos(addr_ptr, str);
-    m_trace.tmp_data_ptr += strlen(str) + 1;
+    m_trace.tmp_data_ptr += ip6tos(addr_ptr, str) + 1;
     return str;
 }
 char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
@@ -500,31 +510,18 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
         m_trace.mutex_lock_count++;
     }
     char *str = m_trace.tmp_data_ptr;
-    int retval, bLeft = tmp_data_left();
-    char tmp[40];
-    uint8_t addr[16] = {0};
-
     if (str == NULL) {
         return "";
     }
-    if (bLeft < 45) {
+    if (tmp_data_left() < 45) {
         return "";
     }
 
-    if (prefix_len != 0) {
-        if (prefix == NULL || prefix_len > 128) {
-            return "<err>";
-        }
-        bitcopy(addr, prefix, prefix_len);
+    if ((prefix_len != 0 && prefix == NULL) || prefix_len > 128) {
+        return "<err>";
     }
 
-    ip6tos(addr, tmp);
-    retval = snprintf(str, bLeft, "%s/%u", tmp, prefix_len);
-    if (retval <= 0 || retval > bLeft) {
-        return "";
-    }
-
-    m_trace.tmp_data_ptr += retval + 1;
+    m_trace.tmp_data_ptr += ip6_prefix_tos(prefix, prefix_len, str) + 1;
     return str;
 }
 #endif //YOTTA_CFG_MBED_TRACE_FEA_IPV6
