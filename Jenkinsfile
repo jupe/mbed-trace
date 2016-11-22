@@ -49,15 +49,8 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
       deleteDir()
       dir("mbed-client-cli") {
         checkout scm
-        execute("mbed | grep \"^version\"")
+        execute("mbed --version")
         execute("mbed deploy --protocol ssh")
-
-        // workaround because of this: https://github.com/ARMmbed/mbed-os/issues/125
-        if(isUnix()) {
-           execute("cp /builds/scripts/mbed_settings.py .")
-        } else {
-           execute("cp C:/mbed_tools/scripts/mbed_settings.py .")
-        }
         execute("mbed compile -m ${target} -t ${toolchain} --library")
       }
     }
