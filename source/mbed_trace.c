@@ -157,6 +157,8 @@ static trace_t m_trace = {
  ************************************************************************************************/
 #if ((MBED_CONF_MBED_TRACE_FEA_IPV6 == 1) && defined(MBEDTRACE_USE_STD_LIBS))
 
+#define IPV6_TO_STR ip6toString
+#define IPV6_PREFIX_TO STR ip6_prefix_toString
 
 uint8_t *bitCpy(uint8_t *restrict dst, const uint8_t *restrict src, uint_fast8_t bits)
 {
@@ -261,14 +263,17 @@ static uint_fast8_t ip6_prefix_toString(const void *prefix, uint_fast8_t prefix_
     }
 
     // Generate prefix part of the string
-    bitcopy(addr, prefix, prefix_len);
-    wptr += ip6toString(addr, wptr);
+    bitCpy(addr, prefix, prefix_len);
+    wptr += IPV6_TO_STR(addr, wptr);
     // Add the prefix length part of the string
     wptr += sprintf(wptr, "/%"PRIuFAST8, prefix_len);
 
     // Return total length of generated string
     return wptr - p;
 }
+#else
+#define IPV6_TO_STR ip6tos
+#define IPV6_PREFIX_TO_STR ip6_prefix_tos
 #endif
 
 
@@ -643,7 +648,7 @@ char *mbed_trace_ipv6(const void *addr_ptr)
         return "<null>";
     }
     str[0] = 0;
-    m_trace.tmp_data_ptr += ip6tos(addr_ptr, str) + 1;
+    m_trace.tmp_data_ptr += IPV6_TO_STR(addr_ptr, str) + 1;
     return str;
 }
 char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
@@ -665,7 +670,7 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
         return "<err>";
     }
 
-    m_trace.tmp_data_ptr += ip6_prefix_toString(prefix, prefix_len, str) + 1;
+    m_trace.tmp_data_ptr += IPV6_PREFIX_TO_STR(prefix, prefix_len, str) + 1;
     return str;
 }
 #endif //MBED_CONF_MBED_TRACE_FEA_IPV6
