@@ -14,10 +14,11 @@
 #include "mbed-cpputest/CppUTest/SimpleString.h"
 #include "mbed-cpputest/CppUTest/CommandLineTestRunner.h"
 
-#define YOTTA_CFG_MBED_TRACE
-#define YOTTA_CFG_MBED_TRACE_FEA_IPV6 1
+#define MBED_CONF_MBED_TRACE_ENABLE 1
+#define MBED_CONF_MBED_TRACE_FEA_IPV6 1
 
 #include "mbed-trace/mbed_trace.h"
+#include "ip6tos_stub.h"
 
 int main(int ac, char **av)
 {
@@ -90,6 +91,19 @@ TEST(trace, Array)
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(longStr, 200) );
 }
 
+TEST(trace, Null0Array)
+{
+  static const unsigned char array[2] = { 0x23, 0x45 };
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(array, 2));
+  STRCMP_EQUAL("23:45", buf);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(array, 0));
+  STRCMP_EQUAL("", buf);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(NULL, 0));
+  STRCMP_EQUAL("", buf);
+  mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "%s", mbed_trace_array(NULL, 2));
+  STRCMP_EQUAL("<null>", buf);
+}
+
 TEST(trace, LongString)
 {
   char longStr[1000] = {0x36};
@@ -117,6 +131,7 @@ TEST(trace, BufferResize)
 {
     uint8_t arr[20] = {0};
     memset(arr, '0', 20);
+
     mbed_trace_buffer_sizes(0, 10);
     STRCMP_EQUAL("30:30:30*", mbed_trace_array(arr, 20));
     mbed_trace_buffer_sizes(0, 15);
@@ -124,22 +139,78 @@ TEST(trace, BufferResize)
     mbed_trace_buffer_sizes(0, 15);
     STRCMP_EQUAL("30:30:30:30", mbed_trace_array(arr, 4));
 
-    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
+    const char * expectedStr = "0123456789";
+    mbed_trace_buffer_sizes(11, 0);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "01234567890123456789");
+    STRCMP_EQUAL(expectedStr, buf);
+    expectedStr = "012345678901234";
+    mbed_trace_buffer_sizes(16, 0);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "01234567890123456789");
+    STRCMP_EQUAL(expectedStr, buf);
+    expectedStr = "012345678901234";
+    mbed_trace_buffer_sizes(16, 0);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "012345678901234");
+    STRCMP_EQUAL(expectedStr, buf);
+}
+
+TEST(trace, PreInitConfiguration)
+{
+    uint8_t arr[20] = {0};
+    memset(arr, '0', 20);
+
+    mbed_trace_free();
+    mbed_trace_config_set(TRACE_MODE_PLAIN|TRACE_ACTIVE_LEVEL_ALL);
+    mbed_trace_print_function_set( myprint );
+    mbed_trace_buffer_sizes(11, 10);
+    mbed_trace_mutex_wait_function_set( my_mutex_wait );
+    mbed_trace_mutex_release_function_set( my_mutex_release );
+    mbed_trace_init();
+
+    STRCMP_EQUAL("30:30:30*", mbed_trace_array(arr, 20));
+
+    const char * expectedStr = "0123456789";
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "01234567890123456789");
+    STRCMP_EQUAL(expectedStr, buf);
 }
 
 #if YOTTA_CFG_MBED_TRACE_FEA_IPV6 == 1
-const char *ip6tos_output_string;
-uint8_t ip6tos_input_array[16];
+ip6tos_stub_def_t ip6tos_stub; // extern variable
 
 TEST(trace, ipv6)
 {
     uint8_t prefix[] = { 0x14, 0x6e, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00 };
     int prefix_len = 64;
-    ip6tos_output_string = "146e:a00::";
-    char *str = mbed_trace_ipv6_prefix(prefix, prefix_len);
-    CHECK(memcmp(ip6tos_input_array, prefix, 8) == 0);
-    STRCMP_EQUAL("146e:a00::/64", str);
 
+    char expected_str1[] = "146e:a00::/64";
+    ip6tos_stub.output_string = "146e:a00::/64";
+    char *str = mbed_trace_ipv6_prefix(prefix, prefix_len);
+    CHECK(memcmp(ip6tos_stub.input_array, prefix, 8) == 0);
+    STRCMP_EQUAL(expected_str1, str);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
+
+    char expected_str2[] = "::/0";
+    ip6tos_stub.output_string = "::/0";
+    str = mbed_trace_ipv6_prefix(NULL, 0);
+    STRCMP_EQUAL(expected_str2, str);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
+
+    char expected_str3[] = "<err>";
+    str = mbed_trace_ipv6_prefix(NULL, 1);
+    STRCMP_EQUAL(expected_str3, str);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
+
+    char expected_str4[] = "<err>";
+    str = mbed_trace_ipv6_prefix(prefix, 200);
+    STRCMP_EQUAL(expected_str4, str);
+    mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
+
+    char expected_str5[] = "";
+    ip6tos_stub.output_string = "0123456789012345678901234567890123456789";
+    str = mbed_trace_ipv6_prefix(prefix, 64); // Fill the tmp_data buffer
+    str = mbed_trace_ipv6_prefix(prefix, 64);
+    str = mbed_trace_ipv6_prefix(prefix, 64);
+    str = mbed_trace_ipv6_prefix(prefix, 64);
+    STRCMP_EQUAL(expected_str5, str);
     mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "flush buffers and locks");
 }
 
@@ -148,9 +219,9 @@ TEST(trace, active_level_all_ipv6)
   mbed_trace_config_set(TRACE_ACTIVE_LEVEL_ALL);
   
   uint8_t arr[] = { 0x20, 0x01, 0xd, 0xb8, 0,0,0,0,0,1,0,0,0,0,0,1 };
-  ip6tos_output_string = "2001:db8::1:0:0:1";
+  ip6tos_stub.output_string = "2001:db8::1:0:0:1";
   mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "my addr: %s", mbed_trace_ipv6(arr));
-  CHECK(memcmp(ip6tos_input_array, arr, 16) == 0);
+  CHECK(memcmp(ip6tos_stub.input_array, arr, 16) == 0);
   STRCMP_EQUAL("[DBG ][mygr]: my addr: 2001:db8::1:0:0:1", buf);
 }
 #endif //YOTTA_CFG_MBED_TRACE_FEA_IPV6
