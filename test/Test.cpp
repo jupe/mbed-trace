@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <pthread.h> /* pthread_create() */
+#include <unistd.h> /* usleep() */
 
 #include "mbed-cpputest/CppUTest/TestHarness.h"
 #include "mbed-cpputest/CppUTest/SimpleString.h"
@@ -474,3 +476,33 @@ TEST(trace, uninitialized)
     STRCMP_EQUAL("hello", buf);
 }
 
+void* multithread_printer(void *ti)
+{
+    volatile int thread_index = *(int *)ti;
+    for(int i=0; i<10; i++) {
+      //printf("thread index = %d, round %d\n", thread_index, i);
+      mbed_tracef(TRACE_LEVEL_DEBUG, "mygr", "thread index = %d, round %d", thread_index, i);
+      usleep(1000 * (1 + thread_index)); /* (1 + thread_index) ms delay */
+    }
+    return NULL;
+}
+
+TEST(trace, multithread)
+{
+    const int thread_amount = 10;
+    pthread_t threads[thread_amount];
+    int thread_indexes[thread_amount];
+
+    for(int j=0; j<10; j++)
+    {
+      for(int i=0; i<(sizeof(threads)/sizeof(pthread_t)); i++) {
+          //printf("creating %d\n", i);
+          thread_indexes[i] = i;
+          pthread_create(&threads[i], NULL, &multithread_printer, (void *)&thread_indexes[i]);
+      }
+      for(int i=0; i<(sizeof(threads)/sizeof(pthread_t)); i++) {
+          //printf("joining %d\n", i);
+          pthread_join(threads[i], NULL);
+      }
+    }
+}
