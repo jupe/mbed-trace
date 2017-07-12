@@ -495,12 +495,12 @@ TEST(trace, multithread)
 
     for(int j=0; j<10; j++)
     {
-      for(int i=0; i<(sizeof(threads)/sizeof(pthread_t)); i++) {
+      for(int i=0; i<thread_amount; i++) {
           //printf("creating %d\n", i);
           thread_indexes[i] = i;
           pthread_create(&threads[i], NULL, &multithread_printer, (void *)&thread_indexes[i]);
       }
-      for(int i=0; i<(sizeof(threads)/sizeof(pthread_t)); i++) {
+      for(int i=0; i<thread_amount; i++) {
           //printf("joining %d\n", i);
           pthread_join(threads[i], NULL);
       }
