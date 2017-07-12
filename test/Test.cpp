@@ -492,15 +492,16 @@ TEST(trace, multithread)
     const int thread_amount = 10;
     pthread_t threads[thread_amount];
     int thread_indexes[thread_amount];
+    int i, j;
 
-    for(int j=0; j<10; j++)
+    for(j=0; j<10; j++)
     {
-      for(int i=0; i<thread_amount; i++) {
+      for(i=0; i<thread_amount; i++) {
           //printf("creating %d\n", i);
           thread_indexes[i] = i;
           pthread_create(&threads[i], NULL, &multithread_printer, (void *)&thread_indexes[i]);
       }
-      for(int i=0; i<thread_amount; i++) {
+      for(i=0; i<thread_amount; i++) {
           //printf("joining %d\n", i);
           pthread_join(threads[i], NULL);
       }
