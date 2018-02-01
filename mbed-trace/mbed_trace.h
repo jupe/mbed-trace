@@ -48,7 +48,7 @@
 extern "C" {
 #endif
 
-#ifdef YOTTA_CFG
+#if defined(YOTTA_CFG) || HAVE_NS_TYPES == 0
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -57,6 +57,15 @@ extern "C" {
 #endif
 
 #include <stdarg.h>
+
+struct trace_t;
+
+#ifndef MBED_CLIENT_TRACE_MANAGEMENT
+// if C++ TraceManager is in use, we don't
+// need this global tracing object
+extern struct trace_t *g_trace;
+#endif
+
 
 #ifndef YOTTA_CFG_MBED_TRACE
 #define YOTTA_CFG_MBED_TRACE 0
@@ -124,44 +133,44 @@ extern "C" {
 
 //usage macros:
 #if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_DEBUG
-#define tr_debug(...)           mbed_tracef(TRACE_LEVEL_DEBUG,   TRACE_GROUP, __VA_ARGS__)   //!< Print debug message
+#define tr_debug(...)           mbed_tracef(g_trace, TRACE_LEVEL_DEBUG,   TRACE_GROUP, __VA_ARGS__)   //!< Print debug message
 #else
 #define tr_debug(...)
 #endif
 
 #if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_INFO
-#define tr_info(...)            mbed_tracef(TRACE_LEVEL_INFO,    TRACE_GROUP, __VA_ARGS__)   //!< Print info message
+#define tr_info(...)            mbed_tracef(g_trace, TRACE_LEVEL_INFO,    TRACE_GROUP, __VA_ARGS__)   //!< Print info message
 #else
 #define tr_info(...)
 #endif
 
 #if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_WARN
-#define tr_warning(...)         mbed_tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Print warning message
-#define tr_warn(...)            mbed_tracef(TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Alternative warning message
+#define tr_warning(...)         mbed_tracef(g_trace, TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Print warning message
+#define tr_warn(...)            mbed_tracef(g_trace, TRACE_LEVEL_WARN,    TRACE_GROUP, __VA_ARGS__)   //!< Alternative warning message
 #else
 #define tr_warning(...)
 #define tr_warn(...)
 #endif
 
 #if MBED_TRACE_MAX_LEVEL >= TRACE_LEVEL_ERROR
-#define tr_error(...)           mbed_tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Print Error Message
-#define tr_err(...)             mbed_tracef(TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Alternative error message
+#define tr_error(...)           mbed_tracef(g_trace, TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Print Error Message
+#define tr_err(...)             mbed_tracef(g_trace, TRACE_LEVEL_ERROR,   TRACE_GROUP, __VA_ARGS__)   //!< Alternative error message
 #else
 #define tr_error(...)
 #define tr_err(...)
 #endif
 
-#define tr_cmdline(...)         mbed_tracef(TRACE_LEVEL_CMD,     TRACE_GROUP, __VA_ARGS__)   //!< Special print for cmdline. See more from TRACE_LEVEL_CMD -level
+#define tr_cmdline(...)         mbed_tracef(g_trace, TRACE_LEVEL_CMD,     TRACE_GROUP, __VA_ARGS__)   //!< Special print for cmdline. See more from TRACE_LEVEL_CMD -level
 
 //aliases for the most commonly used functions and the helper functions
-#define tracef(dlevel, grp, ...)                mbed_tracef(dlevel, grp, __VA_ARGS__)       //!< Alias for mbed_tracef()
-#define vtracef(dlevel, grp, fmt, ap)           mbed_vtracef(dlevel, grp, fmt, ap)          //!< Alias for mbed_vtracef()
-#define tr_array(buf, len)                      mbed_trace_array(buf, len)                  //!< Alias for mbed_trace_array()
-#define tr_ipv6(addr_ptr)                       mbed_trace_ipv6(addr_ptr)                   //!< Alias for mbed_trace_ipv6()
-#define tr_ipv6_prefix(prefix, prefix_len)      mbed_trace_ipv6_prefix(prefix, prefix_len)  //!< Alias for mbed_trace_ipv6_prefix()
-#define trace_array(buf, len)                   mbed_trace_array(buf, len)                  //!< Alias for mbed_trace_array()
-#define trace_ipv6(addr_ptr)                    mbed_trace_ipv6(addr_ptr)                   //!< Alias for mbed_trace_ipv6()
-#define trace_ipv6_prefix(prefix, prefix_len)   mbed_trace_ipv6_prefix(prefix, prefix_len)  //!< Alias for mbed_trace_ipv6_prefix()
+#define tracef(dlevel, grp, ...)                mbed_tracef(g_trace, dlevel, grp, __VA_ARGS__)       //!< Alias for mbed_tracef()
+#define vtracef(dlevel, grp, fmt, ap)           mbed_vtracef(g_trace, dlevel, grp, fmt, ap)          //!< Alias for mbed_vtracef()
+#define tr_array(buf, len)                      mbed_trace_array(g_trace, buf, len)                  //!< Alias for mbed_trace_array()
+#define tr_ipv6(addr_ptr)                       mbed_trace_ipv6(g_trace, addr_ptr)                   //!< Alias for mbed_trace_ipv6()
+#define tr_ipv6_prefix(prefix, prefix_len)      mbed_trace_ipv6_prefix(g_trace, prefix, prefix_len)  //!< Alias for mbed_trace_ipv6_prefix()
+#define trace_array(buf, len)                   mbed_trace_array(g_trace, buf, len)                  //!< Alias for mbed_trace_array()
+#define trace_ipv6(addr_ptr)                    mbed_trace_ipv6(g_trace, addr_ptr)                   //!< Alias for mbed_trace_ipv6()
+#define trace_ipv6_prefix(prefix, prefix_len)   mbed_trace_ipv6_prefix(g_trace, prefix, prefix_len)  //!< Alias for mbed_trace_ipv6_prefix()
 
 
 /**
@@ -180,17 +189,17 @@ extern "C" {
  * Initialize trace functionality
  * @return 0 when all success, otherwise non zero
  */
-int mbed_trace_init( trace_t* self );
+int mbed_trace_init(struct trace_t* self );
 /**
  * Free trace memory
  */
-void mbed_trace_free( trace_t* self );
+void mbed_trace_free(struct trace_t* self );
 /**
  * Resize buffers (line / tmp ) sizes
  * @param lineLength    new maximum length for trace line (0 = do no resize)
  * @param tmpLength     new maximum length for trace tmp buffer (used for trace_array, etc) (0 = do no resize)
  */
-void mbed_trace_buffer_sizes(trace_t* self, int lineLength, int tmpLength);
+void mbed_trace_buffer_sizes(struct trace_t* self, int lineLength, int tmpLength);
 /**
  *  Set trace configurations
  *  Possible parameters:
@@ -213,11 +222,11 @@ void mbed_trace_buffer_sizes(trace_t* self, int lineLength, int tmpLength);
  *  mbed_trace_config_set( TRACE_ACTIVE_LEVEL_ALL|TRACE_MODE_COLOR );
  * @endcode
  */
-void mbed_trace_config_set(trace_t* self, uint8_t config);
+void mbed_trace_config_set(struct trace_t* self, uint8_t config);
 /** get trace configurations
  * @return trace configuration byte
  */
-uint8_t mbed_trace_config_get(trace_t* self);
+uint8_t mbed_trace_config_get(struct trace_t* self);
 /**
  * Set trace prefix function
  * pref_f -function return string with null terminated
@@ -226,7 +235,7 @@ uint8_t mbed_trace_config_get(trace_t* self);
  *   char* trace_time(){ return "rtc-time-in-string"; }
  *   mbed_trace_prefix_function_set( &trace_time );
  */
-void mbed_trace_prefix_function_set( trace_t* self, char* (*pref_f)(size_t) );
+void mbed_trace_prefix_function_set(struct trace_t* self, char* (*pref_f)(size_t) );
 /**
  * Set trace suffix function
  * suffix -function return string with null terminated
@@ -235,18 +244,18 @@ void mbed_trace_prefix_function_set( trace_t* self, char* (*pref_f)(size_t) );
  *   char* trace_suffix(){ return " END"; }
  *   mbed_trace_suffix_function_set( &trace_suffix );
  */
-void mbed_trace_suffix_function_set(trace_t* self, char* (*suffix_f)(void) );
+void mbed_trace_suffix_function_set(struct trace_t* self, char* (*suffix_f)(void) );
 /**
  * Set trace print function
  * By default, trace module print using printf() function,
  * but with this you can write own print function,
  * for e.g. to other IO device.
  */
-void mbed_trace_print_function_set(trace_t* self, void (*print_f)(const char*) );
+void mbed_trace_print_function_set(struct trace_t* self, void (*print_f)(const char*) );
 /**
  * Set trace print function for tr_cmdline()
  */
-void mbed_trace_cmdprint_function_set(trace_t* self, void (*printf)(const char*) );
+void mbed_trace_cmdprint_function_set(struct trace_t* self, void (*printf)(const char*) );
 /**
  * Set trace mutex wait function
  * By default, trace calls are not thread safe.
@@ -254,7 +263,7 @@ void mbed_trace_cmdprint_function_set(trace_t* self, void (*printf)(const char*)
  * The specific implementation is up to the application developer, but the mutex must count so it can
  * be acquired from a single thread repeatedly.
  */
-void mbed_trace_mutex_wait_function_set(trace_t* self, void (*mutex_wait_f)(void));
+void mbed_trace_mutex_wait_function_set(struct trace_t* self, void (*mutex_wait_f)(void));
 /**
  * Set trace mutex release function
  * By default, trace calls are not thread safe.
@@ -262,7 +271,7 @@ void mbed_trace_mutex_wait_function_set(trace_t* self, void (*mutex_wait_f)(void
  * each trace call. The specific implementation is up to the application developer, but the mutex must count so it can
  * be acquired from a single thread repeatedly.
  */
-void mbed_trace_mutex_release_function_set(trace_t* self, void (*mutex_release_f)(void));
+void mbed_trace_mutex_release_function_set(struct trace_t* self, void (*mutex_release_f)(void));
 /**
  * When trace group contains text in filters,
  * trace print will be ignored.
@@ -270,10 +279,10 @@ void mbed_trace_mutex_release_function_set(trace_t* self, void (*mutex_release_f
  *  mbed_trace_exclude_filters_set("mygr");
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "ougr", "This is not printed");
  */
-void mbed_trace_exclude_filters_set(trace_t* self, char* filters);
+void mbed_trace_exclude_filters_set(struct trace_t* self, char* filters);
 /** get trace exclude filters
  */
-const char* mbed_trace_exclude_filters_get(trace_t* self);
+const char* mbed_trace_exclude_filters_get(struct trace_t* self);
 /**
  * When trace group contains text in filter,
  * trace will be printed.
@@ -282,10 +291,10 @@ const char* mbed_trace_exclude_filters_get(trace_t* self);
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "mygr", "Hi There");
  *  mbed_tracef(TRACE_ACTIVE_LEVEL_DEBUG, "grp2", "This is not printed");
  */
-void mbed_trace_include_filters_set(trace_t* self, char* filters);
+void mbed_trace_include_filters_set(struct trace_t* self, char* filters);
 /** get trace include filters
  */
-const char* mbed_trace_include_filters_get(trace_t* self);
+const char* mbed_trace_include_filters_get(struct trace_t* self);
 /**
  * General trace function
  * This should be used every time when user want to print out something important thing
@@ -298,9 +307,9 @@ const char* mbed_trace_include_filters_get(trace_t* self);
  * @param ...    variable arguments related to fmt
  */
 #if defined(__GNUC__) || defined(__CC_ARM)
-void mbed_tracef(uint8_t dlevel, const char* grp, const char *fmt, ...) __attribute__ ((__format__(__printf__, 3, 4)));
+void mbed_tracef(struct trace_t* self, uint8_t dlevel, const char* grp, const char *fmt, ...) __attribute__ ((__format__(__printf__, 4, 5)));
 #else
-void mbed_tracef(uint8_t dlevel, const char* grp, const char *fmt, ...);
+void mbed_tracef(struct trace_t* self, uint8_t dlevel, const char* grp, const char *fmt, ...);
 #endif
 /**
  * General trace function
@@ -318,16 +327,16 @@ void mbed_tracef(uint8_t dlevel, const char* grp, const char *fmt, ...);
  * @param ap     variable arguments list (like vprintf)
  */
 #if defined(__GNUC__) || defined(__CC_ARM)
-void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap) __attribute__ ((__format__(__printf__, 3, 0)));
+void mbed_vtracef(struct trace_t* self, uint8_t dlevel, const char* grp, const char *fmt, va_list ap) __attribute__ ((__format__(__printf__, 4, 0)));
 #else
-void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap);
+void mbed_vtracef(struct trace_t* self, uint8_t dlevel, const char* grp, const char *fmt, va_list ap);
 #endif
 
 
 /**
  *  Get last trace from buffer
  */
-const char* mbed_trace_last(void);
+const char* mbed_trace_last(struct trace_t* self);
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
 /**
  * mbed_tracef helping function for convert ipv6
@@ -339,7 +348,7 @@ const char* mbed_trace_last(void);
  * @param add_ptr  IPv6 Address pointer
  * @return temporary buffer where ipv6 is in string format
  */
-char* mbed_trace_ipv6(const void *addr_ptr);
+char* mbed_trace_ipv6(struct trace_t* self, const void *addr_ptr);
 /**
  * mbed_tracef helping function for print ipv6 prefix
  * usage e.g.
@@ -350,7 +359,7 @@ char* mbed_trace_ipv6(const void *addr_ptr);
  * @param prefix_len    prefix length
  * @return temporary buffer where ipv6 is in string format
  */
-char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
+char* mbed_trace_ipv6_prefix(struct trace_t* self, const uint8_t *prefix, uint8_t prefix_len);
 #endif
 /**
  * mbed_tracef helping function for convert hex-array to string.
@@ -364,7 +373,7 @@ char* mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len);
  * if array as string not fit to temp buffer, this function write '*' as last character,
  * which indicate that buffer is too small for array.
  */
-char* mbed_trace_array(const uint8_t* buf, uint16_t len);
+char* mbed_trace_array(struct trace_t* self, const uint8_t* buf, uint16_t len);
 
 #ifdef __cplusplus
 }

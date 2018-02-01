@@ -17,6 +17,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+extern C {
+
 #ifdef MBED_CONF_MBED_TRACE_ENABLE
 #undef MBED_CONF_MBED_TRACE_ENABLE
 #endif
@@ -151,8 +153,24 @@ static trace_t m_trace = {
     .mutex_lock_count = 0
 };
 
-int mbed_trace_init( trace_t* self )
+#ifndef MBED_CLIENT_TRACE_MANAGEMENT
+// if C++ TraceManager is in use, we don't
+// need this global tracing object
+trace_t *g_trace;
+#endif
+
+trace_t* mbed_trace_init( trace_t* self )
 {
+     printf("Hellou");
+    if( !self ){
+        self = malloc(sizeof(trace_t));
+        if( !self ) {
+            return NULL;
+        }
+#ifndef MBED_CLIENT_TRACE_MANAGEMENT
+        g_trace = self;
+#endif
+    }
     if (self->line == NULL) {
         self->line = MBED_TRACE_MEM_ALLOC(self->line_length);
     }
@@ -174,7 +192,7 @@ int mbed_trace_init( trace_t* self )
             self->filters_exclude == NULL  ||
             self->filters_include == NULL) {
         //memory allocation fail
-        mbed_trace_free();
+        mbed_trace_free(self);
         return -1;
     }
     memset(self->tmp_data, 0, self->tmp_data_length);
@@ -182,7 +200,7 @@ int mbed_trace_init( trace_t* self )
     memset(self->filters_include, 0, self->filters_length);
     memset(self->line, 0, self->line_length);
 
-    return 0;
+    return self;
 }
 void mbed_trace_free( trace_t* self )
 {
@@ -225,39 +243,39 @@ void mbed_trace_buffer_sizes(trace_t *self, int lineLength, int tmpLength)
         mbed_trace_reset_tmp();
     }
 }
-void mbed_trace_config_set(uint8_t config)
+void mbed_trace_config_set(trace_t *self, uint8_t config)
 {
     self->trace_config = config;
 }
-uint8_t mbed_trace_config_get(void)
+uint8_t mbed_trace_config_get(trace_t *self)
 {
     return self->trace_config;
 }
-void mbed_trace_prefix_function_set(char *(*pref_f)(size_t))
+void mbed_trace_prefix_function_set(trace_t *self, char *(*pref_f)(size_t))
 {
     self->prefix_f = pref_f;
 }
-void mbed_trace_suffix_function_set(char *(*suffix_f)(void))
+void mbed_trace_suffix_function_set(trace_t *self, char *(*suffix_f)(void))
 {
     self->suffix_f = suffix_f;
 }
-void mbed_trace_print_function_set(void (*printf)(const char *))
+void mbed_trace_print_function_set(trace_t *self, void (*printf)(const char *))
 {
     self->printf = printf;
 }
-void mbed_trace_cmdprint_function_set(void (*printf)(const char *))
+void mbed_trace_cmdprint_function_set(trace_t *self, void (*printf)(const char *))
 {
     self->cmd_printf = printf;
 }
-void mbed_trace_mutex_wait_function_set(void (*mutex_wait_f)(void))
+void mbed_trace_mutex_wait_function_set(trace_t *self, void (*mutex_wait_f)(void))
 {
     self->mutex_wait_f = mutex_wait_f;
 }
-void mbed_trace_mutex_release_function_set(void (*mutex_release_f)(void))
+void mbed_trace_mutex_release_function_set(trace_t *self, void (*mutex_release_f)(void))
 {
     self->mutex_release_f = mutex_release_f;
 }
-void mbed_trace_exclude_filters_set(char *filters)
+void mbed_trace_exclude_filters_set(trace_t *self, char *filters)
 {
     if (filters) {
         (void)strncpy(self->filters_exclude, filters, self->filters_length);
@@ -265,15 +283,15 @@ void mbed_trace_exclude_filters_set(char *filters)
         self->filters_exclude[0] = 0;
     }
 }
-const char *mbed_trace_exclude_filters_get(void)
+const char *mbed_trace_exclude_filters_get(trace_t *self)
 {
     return self->filters_exclude;
 }
-const char *mbed_trace_include_filters_get(void)
+const char *mbed_trace_include_filters_get(trace_t *self)
 {
     return self->filters_include;
 }
-void mbed_trace_include_filters_set(char *filters)
+void mbed_trace_include_filters_set(trace_t *self, char *filters)
 {
     if (filters) {
         (void)strncpy(self->filters_include, filters, self->filters_length);
@@ -281,7 +299,7 @@ void mbed_trace_include_filters_set(char *filters)
         self->filters_include[0] = 0;
     }
 }
-static int8_t mbed_trace_skip(int8_t dlevel, const char *grp)
+static int8_t mbed_trace_skip(trace_t *self, int8_t dlevel, const char *grp)
 {
     if (dlevel >= 0 && grp != 0) {
         // filter debug prints only when dlevel is >0 and grp is given
@@ -304,14 +322,14 @@ static void mbed_trace_default_print(const char *str)
 {
     puts(str);
 }
-void mbed_tracef(uint8_t dlevel, const char *grp, const char *fmt, ...)
+void mbed_tracef(trace_t *self, uint8_t dlevel, const char *grp, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    mbed_vtracef(dlevel, grp, fmt, ap);
+    mbed_vtracef(self, dlevel, grp, fmt, ap);
     va_end(ap);
 }
-void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
+void mbed_vtracef(trace_t *self, uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
 {
     if ( self->mutex_wait_f ) {
         self->mutex_wait_f();
@@ -324,9 +342,9 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
 
     self->line[0] = 0; //by default trace is empty
 
-    if (mbed_trace_skip(dlevel, grp) || fmt == 0 || grp == 0 || !self->printf) {
+    if (mbed_trace_skip(self, dlevel, grp) || fmt == 0 || grp == 0 || !self->printf) {
         //return tmp data pointer back to the beginning
-        mbed_trace_reset_tmp();
+        mbed_trace_reset_tmp(self);
         goto end;
     }
     if ((self->trace_config & TRACE_MASK_LEVEL) &  dlevel) {
@@ -472,7 +490,7 @@ void mbed_vtracef(uint8_t dlevel, const char* grp, const char *fmt, va_list ap)
             self->printf(self->line);
         }
         //return tmp data pointer back to the beginning
-        mbed_trace_reset_tmp();
+        mbed_trace_reset_tmp(self);
     }
 
 end:
@@ -493,18 +511,18 @@ end:
         } while (--count > 0);
     }
 }
-static void mbed_trace_reset_tmp(void)
+static void mbed_trace_reset_tmp(trace_t *self)
 {
     self->tmp_data_ptr = self->tmp_data;
 }
-const char *mbed_trace_last(void)
+const char *mbed_trace_last(trace_t *self)
 {
     return self->line;
 }
 /* Helping functions */
-#define tmp_data_left()  self->tmp_data_length-(self->tmp_data_ptr-self->tmp_data)
+#define tmp_data_left(self)  self->tmp_data_length-(self->tmp_data_ptr-self->tmp_data)
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
-char *mbed_trace_ipv6(const void *addr_ptr)
+char *mbed_trace_ipv6(ctrace_t *self, onst void *addr_ptr)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
     if ( self->mutex_wait_f ) {
@@ -515,7 +533,7 @@ char *mbed_trace_ipv6(const void *addr_ptr)
     if (str == NULL) {
         return "";
     }
-    if (tmp_data_left() < 41) {
+    if (tmp_data_left(self) < 41) {
         return "";
     }
     if (addr_ptr == NULL) {
@@ -525,7 +543,7 @@ char *mbed_trace_ipv6(const void *addr_ptr)
     self->tmp_data_ptr += ip6tos(addr_ptr, str) + 1;
     return str;
 }
-char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
+char *mbed_trace_ipv6_prefix(trace_t *self, const uint8_t *prefix, uint8_t prefix_len)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
     if ( self->mutex_wait_f ) {
@@ -536,7 +554,7 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
     if (str == NULL) {
         return "";
     }
-    if (tmp_data_left() < 45) {
+    if (tmp_data_left(self) < 45) {
         return "";
     }
 
@@ -548,14 +566,14 @@ char *mbed_trace_ipv6_prefix(const uint8_t *prefix, uint8_t prefix_len)
     return str;
 }
 #endif //MBED_CONF_MBED_TRACE_FEA_IPV6
-char *mbed_trace_array(const uint8_t *buf, uint16_t len)
+char *mbed_trace_array(trace_t *self, const uint8_t *buf, uint16_t len)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
     if ( self->mutex_wait_f ) {
         self->mutex_wait_f();
         self->mutex_lock_count++;
     }
-    int i, bLeft = tmp_data_left();
+    int i, bLeft = tmp_data_left(trace_t *self);
     char *str, *wptr;
     str = self->tmp_data_ptr;
     if (len == 0 || str == NULL || bLeft == 0) {
@@ -592,4 +610,5 @@ char *mbed_trace_array(const uint8_t *buf, uint16_t len)
     }
     self->tmp_data_ptr = wptr;
     return str;
+}
 }
