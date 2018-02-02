@@ -447,11 +447,11 @@ char* mbed_trace_array(trace_t* self, const uint8_t* buf, uint16_t len);
 #elif !defined(MBED_TRACE_DUMMIES_DEFINED)
 // define dummies, hiding the real functions
 #define MBED_TRACE_DUMMIES_DEFINED
-#define mbed_trace_init(...)                        ((void*) 0)
+#define mbed_trace_init(...)                        ((trace_t*) 0)
 #define mbed_trace_free(...)                        ((void) 0)
 #define mbed_trace_buffer_sizes(...)                ((void) 0)
 #define mbed_trace_config_set(...)                  ((void) 0)
-#define mbed_trace_config_get(...)                  ((void*) 0)
+#define mbed_trace_config_get(...)                  ((trace_t*) 0)
 #define mbed_trace_prefix_function_set(...)         ((void) 0)
 #define mbed_trace_suffix_function_set(...)         ((void) 0)
 #define mbed_trace_print_function_set(...)          ((void) 0)

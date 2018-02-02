@@ -97,24 +97,6 @@ static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length);
 static void mbed_trace_default_print(const char *str);
 static void mbed_trace_reset_tmp(trace_t* self);
 
-static trace_t m_trace = {
-    .trace_config = DEFAULT_TRACE_CONFIG,
-    .filters_exclude = 0,
-    .filters_include = 0,
-    .filters_length = DEFAULT_TRACE_FILTER_LENGTH,
-    .line = 0,
-    .line_length = DEFAULT_TRACE_LINE_LENGTH,
-    .tmp_data = 0,
-    .tmp_data_length = DEFAULT_TRACE_TMP_LINE_LEN,
-    .prefix_f = 0,
-    .suffix_f = 0,
-    .printf  = mbed_trace_default_print,
-    .cmd_printf = 0,
-    .mutex_wait_f = 0,
-    .mutex_release_f = 0,
-    .mutex_lock_count = 0
-};
-
 trace_t *g_trace;
 
 static void mbed_trace_init_defaults(trace_t* self)
