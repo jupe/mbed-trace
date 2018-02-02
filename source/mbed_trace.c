@@ -478,7 +478,7 @@ const char *mbed_trace_last(trace_t *self)
 /* Helping functions */
 #define tmp_data_left(self)  self->tmp_data_length-(self->tmp_data_ptr-self->tmp_data)
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
-char *mbed_trace_ipv6(ctrace_t *self, onst void *addr_ptr)
+char *mbed_trace_ipv6(trace_t *self, onst void *addr_ptr)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
     if ( self->mutex_wait_f ) {
