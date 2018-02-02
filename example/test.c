@@ -5,9 +5,10 @@
 
 
 int main(int argc, char* argv[]) {
-    printf("test\n\n");
-    mbed_trace_init(0);
+    mbed_trace_init(NULL);
     tr_debug("Hellou");
-    printf("\ntest\n");
+    tr_info("Hellou");
+    tr_info("Hellou");
+    tr_warn("Hellou");
     return 0;
 }

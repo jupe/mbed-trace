@@ -17,8 +17,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-extern C {
-
 #ifdef MBED_CONF_MBED_TRACE_ENABLE
 #undef MBED_CONF_MBED_TRACE_ENABLE
 #endif
@@ -97,43 +95,7 @@ extern C {
 /** default print function, just redirect str to printf */
 static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length);
 static void mbed_trace_default_print(const char *str);
-static void mbed_trace_reset_tmp(void);
-
-typedef struct trace_s {
-    /** trace configuration bits */
-    uint8_t trace_config;
-    /** exclude filters list, related group name */
-    char *filters_exclude;
-    /** include filters list, related group name */
-    char *filters_include;
-    /** Filters length */
-    int filters_length;
-    /** trace line */
-    char *line;
-    /** trace line length */
-    int line_length;
-    /** temporary data */
-    char *tmp_data;
-    /** temporary data array length */
-    int tmp_data_length;
-    /** temporary data pointer */
-    char *tmp_data_ptr;
-
-    /** prefix function, which can be used to put time to the trace line */
-    char *(*prefix_f)(size_t);
-    /** suffix function, which can be used to some string to the end of trace line */
-    char *(*suffix_f)(void);
-    /** print out function. Can be redirect to flash for example. */
-    void (*printf)(const char *);
-    /** print out function for TRACE_LEVEL_CMD */
-    void (*cmd_printf)(const char *);
-    /** mutex wait function which can be called to lock against a mutex. */
-    void (*mutex_wait_f)(void);
-    /** mutex release function which must be used to release the mutex locked by mutex_wait_f. */
-    void (*mutex_release_f)(void);
-    /** number of times the mutex has been locked */
-    int mutex_lock_count;
-} trace_t;
+static void mbed_trace_reset_tmp(trace_t* self);
 
 static trace_t m_trace = {
     .trace_config = DEFAULT_TRACE_CONFIG,
@@ -153,28 +115,40 @@ static trace_t m_trace = {
     .mutex_lock_count = 0
 };
 
-#ifndef MBED_CLIENT_TRACE_MANAGEMENT
-// if C++ TraceManager is in use, we don't
-// need this global tracing object
 trace_t *g_trace;
-#endif
 
-trace_t* mbed_trace_init( trace_t* self )
+static void mbed_trace_init_defaults(trace_t* self)
 {
-     printf("Hellou");
+    self->trace_config = DEFAULT_TRACE_CONFIG;
+    self->filters_exclude = 0;
+    self->filters_include = 0;
+    self->filters_length = DEFAULT_TRACE_FILTER_LENGTH;
+    self->line = 0;
+    self->line_length = DEFAULT_TRACE_LINE_LENGTH;
+    self->tmp_data = 0;
+    self->tmp_data_length = DEFAULT_TRACE_TMP_LINE_LEN;
+    self->prefix_f = 0;
+    self->suffix_f = 0;
+    self->printf  = mbed_trace_default_print;
+    self->cmd_printf = 0;
+    self->mutex_wait_f = 0;
+    self->mutex_release_f = 0;
+    self->mutex_lock_count = 0;
+}
+
+trace_t* mbed_trace_init(trace_t* self)
+{
     if( !self ){
         self = malloc(sizeof(trace_t));
         if( !self ) {
             return NULL;
         }
-#ifndef MBED_CLIENT_TRACE_MANAGEMENT
+        mbed_trace_init_defaults(self);
         g_trace = self;
-#endif
     }
     if (self->line == NULL) {
         self->line = MBED_TRACE_MEM_ALLOC(self->line_length);
     }
-
     if (self->tmp_data == NULL) {
         self->tmp_data = MBED_TRACE_MEM_ALLOC(self->tmp_data_length);
     }
@@ -186,14 +160,14 @@ trace_t* mbed_trace_init( trace_t* self )
     if (self->filters_include == NULL) {
         self->filters_include = MBED_TRACE_MEM_ALLOC(self->filters_length);
     }
-
+    
     if (self->line == NULL ||
-            self->tmp_data == NULL ||
-            self->filters_exclude == NULL  ||
-            self->filters_include == NULL) {
+        self->tmp_data == NULL ||
+        self->filters_exclude == NULL  ||
+        self->filters_include == NULL) {
         //memory allocation fail
         mbed_trace_free(self);
-        return -1;
+        return NULL;
     }
     memset(self->tmp_data, 0, self->tmp_data_length);
     memset(self->filters_exclude, 0, self->filters_length);
@@ -202,7 +176,7 @@ trace_t* mbed_trace_init( trace_t* self )
 
     return self;
 }
-void mbed_trace_free( trace_t* self )
+void mbed_trace_free(trace_t* self )
 {
     // release memory
     MBED_TRACE_MEM_FREE(self->line);
@@ -227,7 +201,7 @@ void mbed_trace_free( trace_t* self )
     self->mutex_release_f = 0;
     self->mutex_lock_count = 0;
 }
-static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length)
+static void mbed_trace_realloc(char **buffer, int *length_ptr, int new_length)
 {
     MBED_TRACE_MEM_FREE(*buffer);
     *buffer  = MBED_TRACE_MEM_ALLOC(new_length);
@@ -240,7 +214,7 @@ void mbed_trace_buffer_sizes(trace_t *self, int lineLength, int tmpLength)
     }
     if( tmpLength > 0 ) {
         mbed_trace_realloc( &(self->tmp_data), &self->tmp_data_length, tmpLength);
-        mbed_trace_reset_tmp();
+        mbed_trace_reset_tmp(self);
     }
 }
 void mbed_trace_config_set(trace_t *self, uint8_t config)
@@ -573,7 +547,7 @@ char *mbed_trace_array(trace_t *self, const uint8_t *buf, uint16_t len)
         self->mutex_wait_f();
         self->mutex_lock_count++;
     }
-    int i, bLeft = tmp_data_left(trace_t *self);
+    int i, bLeft = tmp_data_left(self);
     char *str, *wptr;
     str = self->tmp_data_ptr;
     if (len == 0 || str == NULL || bLeft == 0) {
@@ -611,4 +585,4 @@ char *mbed_trace_array(trace_t *self, const uint8_t *buf, uint16_t len)
     self->tmp_data_ptr = wptr;
     return str;
 }
-}
+
