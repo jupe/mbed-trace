@@ -77,13 +77,16 @@ typedef struct trace_s {
     int tmp_data_length;
     /** temporary data pointer */
     char *tmp_data_ptr;
-
+    /** File stream for writing */
+    FILE *stream;
     /** prefix function, which can be used to put time to the trace line */
     char *(*prefix_f)(size_t);
     /** suffix function, which can be used to some string to the end of trace line */
     char *(*suffix_f)(void);
-    /** print out function. Can be redirect to flash for example. */
-    void (*printf)(const char *);
+    /** stream out function. Can be redirect to flash for example. */
+    int (*fputs)(const char *, FILE*);
+    /** default formatter function  */
+    void (*vtracef)(trace_s *, uint8_t, const char*, const char *, va_list);
     /** print out function for TRACE_LEVEL_CMD */
     void (*cmd_printf)(const char *);
     /** mutex wait function which can be called to lock against a mutex. */
@@ -194,7 +197,7 @@ extern trace_t* g_trace;
 
 //aliases for the most commonly used functions and the helper functions
 #define tracef(dlevel, grp, ...)                mbed_tracef(g_trace, dlevel, grp, __VA_ARGS__)       //!< Alias for mbed_tracef()
-#define vtracef(dlevel, grp, fmt, ap)           mbed_vtracef(g_trace, dlevel, grp, fmt, ap)          //!< Alias for mbed_vtracef()
+//#define vtracef(dlevel, grp, fmt, ap)           mbed_vtracef(g_trace, dlevel, grp, fmt, ap)          //!< Alias for mbed_vtracef()
 #define tr_array(buf, len)                      mbed_trace_array(g_trace, buf, len)                  //!< Alias for mbed_trace_array()
 #define tr_ipv6(addr_ptr)                       mbed_trace_ipv6(g_trace, addr_ptr)                   //!< Alias for mbed_trace_ipv6()
 #define tr_ipv6_prefix(prefix, prefix_len)      mbed_trace_ipv6_prefix(g_trace, prefix, prefix_len)  //!< Alias for mbed_trace_ipv6_prefix()
@@ -214,7 +217,6 @@ extern trace_t* g_trace;
 #define TRACE_GROUP TRACE_GROUP_STR(YOTTA_CFG_MBED_TRACE_GROUP)
 #endif
 #endif
-
 /**
  * Initialize trace functionality
  * @return 0 when all success, otherwise non zero
@@ -277,11 +279,16 @@ void mbed_trace_prefix_function_set(trace_t* self, char* (*pref_f)(size_t) );
 void mbed_trace_suffix_function_set(trace_t* self, char* (*suffix_f)(void) );
 /**
  * Set trace print function
- * By default, trace module print using printf() function,
+ * By default, trace module print using fputs() function,
  * but with this you can write own print function,
  * for e.g. to other IO device.
  */
-void mbed_trace_print_function_set(trace_t* self, void (*print_f)(const char*) );
+void mbed_trace_fputs_function_set(trace_t* self, void (*fputs_f)(const char*, FILE*) );
+/**
+ * give file handle where to write trace lines
+ * By default it points to stdout
+ */
+void mbed_trace_set_pipe(trace_t* self, FILE *stream);
 /**
  * Set trace print function for tr_cmdline()
  */
