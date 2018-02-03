@@ -27,9 +27,9 @@
 
 #define STDOUT stdout
 
-#define tr_silly printf
+#define tr_silly(...) //printf
 
-#include "mbed-trace/mbed_trace.h"
+#include "../mbed-trace/mbed_trace.h"
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
 #include "mbed-client-libservice/ip6string.h"
 #include "mbed-client-libservice/common_functions.h"
@@ -97,6 +97,7 @@
 #endif
 
 /** default print function, just redirect str to printf */
+int8_t mbed_trace_skip(trace_t *self, int8_t dlevel, const char *grp);
 static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length);
 static void mbed_trace_reset_tmp(trace_t* self);
 
@@ -124,6 +125,7 @@ static void mbed_trace_init_defaults(trace_t* self)
     self->mutex_wait_f = 0;
     self->mutex_release_f = 0;
     self->mutex_lock_count = 0;
+    self->filter = mbed_trace_skip;
 }
 void mbed_trace_set_pipe(trace_t* self, FILE *stream)
 {
@@ -208,6 +210,10 @@ uint8_t mbed_trace_config_get(trace_t *self)
 {
     return self->trace_config;
 }
+void mbed_trace_filter_set(trace_t *self, int8_t (*filter)(trace_t*, int8_t, const char *))
+{
+    self->filter = filter ? filter : mbed_trace_skip;
+}
 void mbed_trace_prefix_function_set(trace_t *self, char *(*pref_f)(size_t))
 {
     self->prefix_f = pref_f;
@@ -256,7 +262,7 @@ void mbed_trace_include_filters_set(trace_t *self, char *filters)
         self->filters_include[0] = 0;
     }
 }
-static int8_t mbed_trace_skip(trace_t *self, int8_t dlevel, const char *grp)
+int8_t mbed_trace_skip(trace_t *self, int8_t dlevel, const char *grp)
 {
     if (dlevel >= 0 && grp != 0) {
         // filter debug prints only when dlevel is >0 and grp is given
@@ -294,13 +300,13 @@ void mbed_vtracef(trace_t *self, uint8_t dlevel, const char* grp, const char *fm
     }
 
     if (NULL == self->line) {
-        tr_silly("line is NULL!");
+        tr_silly("line is NULL!\n");
         goto end;
     }
 
     self->line[0] = 0; //by default trace is empty
 
-    if (mbed_trace_skip(self, dlevel, grp) || fmt == 0 || grp == 0 || !mbed_trace_ok(self)) {
+    if (self->filter(self, dlevel, grp) || fmt == 0 || grp == 0 || !mbed_trace_ok(self)) {
         //return tmp data pointer back to the beginning
         mbed_trace_reset_tmp(self);
         goto end;
@@ -312,7 +318,7 @@ void mbed_vtracef(trace_t *self, uint8_t dlevel, const char* grp, const char *fm
 
         int retval = 0, bLeft = self->line_length;
         char *ptr = self->line;
-        if (plain == true || dlevel == TRACE_LEVEL_CMD) {
+        if (plain || dlevel == TRACE_LEVEL_CMD) {
             //add trace data
             retval = vsnprintf(ptr, bLeft, fmt, ap);
             if (dlevel == TRACE_LEVEL_CMD && self->cmd_printf) {
@@ -432,17 +438,23 @@ void mbed_vtracef(trace_t *self, uint8_t dlevel, const char* grp, const char *fm
                 }
             }
 
-            if (retval > 0 && bLeft > 0  && color) {
-                //add zero color VT100 when color mode
-                retval = snprintf(ptr, bLeft, "\x1b[0m%s", cr?"\n":"");
-                if (retval >= bLeft) {
-                    retval = 0;
+            if (retval > 0 && bLeft > 0) {
+                if(color) {
+                    //add zero color VT100 when color mode
+                    retval = snprintf(ptr, bLeft, "\x1b[0m");
+                    if (retval >= bLeft) {
+                        retval = 0;
+                    }
+                    if (retval > 0) {
+                        ptr += retval;
+                        bLeft -= retval;
+                    }
                 }
-                if (retval > 0) {
-                    ptr += retval;
-                    bLeft -= retval;
+                if(retval > 0 && bLeft > 0 && cr) {
+                    snprintf(ptr, bLeft, "\n");
                 }
             }
+            
             //print out whole data
             self->fputs(self->line, self->stream);
         }
@@ -480,7 +492,7 @@ const char *mbed_trace_last(trace_t *self)
 /* Helping functions */
 #define tmp_data_left(self)  self->tmp_data_length-(self->tmp_data_ptr-self->tmp_data)
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
-char *mbed_trace_ipv6(trace_t *self, onst void *addr_ptr)
+char *mbed_trace_ipv6(trace_t *self, const void *addr_ptr)
 {
     /** Acquire mutex. It is released before returning from mbed_vtracef. */
     if ( self->mutex_wait_f ) {

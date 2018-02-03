@@ -13,7 +13,8 @@ EXECUTABLE=test
 all: $(SOURCES) $(EXECUTABLE)
 
 clean:
-	rm $(OBJECTS)
+	rm *.o
+	rm ../source/*.o
     
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@

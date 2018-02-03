@@ -79,6 +79,8 @@ typedef struct trace_s {
     char *tmp_data_ptr;
     /** File stream for writing */
     FILE *stream;
+    /** */
+    int8_t (*filter)(trace_s*, int8_t, const char *);
     /** prefix function, which can be used to put time to the trace line */
     char *(*prefix_f)(size_t);
     /** suffix function, which can be used to some string to the end of trace line */
@@ -284,6 +286,8 @@ void mbed_trace_suffix_function_set(trace_t* self, char* (*suffix_f)(void) );
  * for e.g. to other IO device.
  */
 void mbed_trace_fputs_function_set(trace_t* self, void (*fputs_f)(const char*, FILE*) );
+
+void mbed_trace_filter_set(trace_t *self, int8_t (*filter)(trace_t*, int8_t, const char *));
 /**
  * give file handle where to write trace lines
  * By default it points to stdout
