@@ -56,6 +56,7 @@ extern "C" {
 #include "ns_types.h"
 #endif
 
+#include <stdio.h>
 #include <stdarg.h>
 
 typedef struct trace_s {
@@ -80,7 +81,7 @@ typedef struct trace_s {
     /** File stream for writing */
     FILE *stream;
     /** */
-    int8_t (*filter)(trace_s*, int8_t, const char *);
+    int8_t (*filter)(struct trace_s*, int8_t, const char *);
     /** prefix function, which can be used to put time to the trace line */
     char *(*prefix_f)(size_t);
     /** suffix function, which can be used to some string to the end of trace line */
@@ -88,7 +89,7 @@ typedef struct trace_s {
     /** stream out function. Can be redirect to flash for example. */
     int (*fputs)(const char *, FILE*);
     /** default formatter function  */
-    void (*vtracef)(trace_s *, uint8_t, const char*, const char *, va_list);
+    void (*vtracef)(struct trace_s *, uint8_t, const char*, const char *, va_list);
     /** print out function for TRACE_LEVEL_CMD */
     void (*cmd_printf)(const char *);
     /** mutex wait function which can be called to lock against a mutex. */
@@ -199,7 +200,6 @@ extern trace_t* g_trace;
 
 //aliases for the most commonly used functions and the helper functions
 #define tracef(dlevel, grp, ...)                mbed_tracef(g_trace, dlevel, grp, __VA_ARGS__)       //!< Alias for mbed_tracef()
-//#define vtracef(dlevel, grp, fmt, ap)           mbed_vtracef(g_trace, dlevel, grp, fmt, ap)          //!< Alias for mbed_vtracef()
 #define tr_array(buf, len)                      mbed_trace_array(g_trace, buf, len)                  //!< Alias for mbed_trace_array()
 #define tr_ipv6(addr_ptr)                       mbed_trace_ipv6(g_trace, addr_ptr)                   //!< Alias for mbed_trace_ipv6()
 #define tr_ipv6_prefix(prefix, prefix_len)      mbed_trace_ipv6_prefix(g_trace, prefix, prefix_len)  //!< Alias for mbed_trace_ipv6_prefix()
@@ -285,7 +285,7 @@ void mbed_trace_suffix_function_set(trace_t* self, char* (*suffix_f)(void) );
  * but with this you can write own print function,
  * for e.g. to other IO device.
  */
-void mbed_trace_fputs_function_set(trace_t* self, void (*fputs_f)(const char*, FILE*) );
+void mbed_trace_fputs_function_set(trace_t* self, int (*fputs_f)(const char*, FILE*) );
 
 void mbed_trace_filter_set(trace_t *self, int8_t (*filter)(trace_t*, int8_t, const char *));
 /**

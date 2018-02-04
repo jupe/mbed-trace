@@ -222,13 +222,13 @@ void mbed_trace_suffix_function_set(trace_t *self, char *(*suffix_f)(void))
 {
     self->suffix_f = suffix_f;
 }
-void mbed_trace_fputs_function_set(trace_t *self, int (*fputs)(const char *, FILE*))
+void mbed_trace_fputs_function_set(trace_t *self, int (*fputs_f)(const char *, FILE*))
 {
-    self->fputs = fputs;
+    self->fputs = fputs_f;
 }
-void mbed_trace_cmdprint_function_set(trace_t *self, void (*printf)(const char *))
+void mbed_trace_cmdprint_function_set(trace_t *self, void (*printf_f)(const char *))
 {
-    self->cmd_printf = printf;
+    self->cmd_printf = printf_f;
 }
 void mbed_trace_mutex_wait_function_set(trace_t *self, void (*mutex_wait_f)(void))
 {
