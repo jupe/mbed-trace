@@ -29,7 +29,7 @@
 
 #define tr_silly(...) //printf
 
-#include "../mbed-trace/mbed_trace.h"
+#include "mbed-trace/mbed_trace.h"
 #if MBED_CONF_MBED_TRACE_FEA_IPV6 == 1
 #include "mbed-client-libservice/ip6string.h"
 #include "mbed-client-libservice/common_functions.h"
@@ -102,8 +102,8 @@ static void mbed_trace_realloc( char **buffer, int *length_ptr, int new_length);
 static void mbed_trace_reset_tmp(trace_t* self);
 
 /** const defines */
-const char* null_str = "<null>";
-const char* empty_str = "";
+static const char* null_str = "<null>";
+static const char* empty_str = "";
 trace_t *g_trace = NULL;
 
 static void mbed_trace_init_defaults(trace_t* self)
@@ -118,8 +118,8 @@ static void mbed_trace_init_defaults(trace_t* self)
     self->tmp_data_length = DEFAULT_TRACE_TMP_LINE_LEN;
     self->prefix_f = 0;
     self->suffix_f = 0;
-    self->fputs  = fputs;
-    self->vtracef  = mbed_vtracef;
+    self->fputs = fputs;
+    self->vtracef = mbed_vtracef;
     self->stream = stdout;
     self->cmd_printf = 0;
     self->mutex_wait_f = 0;
@@ -297,6 +297,11 @@ void mbed_vtracef(trace_t *self, uint8_t dlevel, const char* grp, const char *fm
     if ( self->mutex_wait_f ) {
         self->mutex_wait_f();
         self->mutex_lock_count++;
+    }
+
+    if (NULL == self) {
+        tr_silly("self is NULL!\n");
+        goto end;
     }
 
     if (NULL == self->line) {

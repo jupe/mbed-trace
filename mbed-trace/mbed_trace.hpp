@@ -1,7 +1,7 @@
 #ifndef MBED_TRACE_HPP_
 #define MBED_TRACE_HPP_
 
-#include "../mbed-trace/mbed_trace.h"
+#include "mbed-trace/mbed_trace.h"
 
 
 class MbedTrace {

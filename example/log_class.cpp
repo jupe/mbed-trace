@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #define TRACE_GROUP "test"
-#include "../mbed-trace/mbed_trace.hpp"
+#include "mbed-trace/mbed_trace.hpp"
 
 int main(int argc, char *argv[])
 {

@@ -1,8 +1,8 @@
 #include <stdio.h>
 
 #define TRACE_GROUP "TRAC"
-#include "../mbed-trace/mbed_trace.h"
-#include "../mbed-trace/mbed_trace.hpp"
+#include "mbed-trace/mbed_trace.h"
+#include "mbed-trace/mbed_trace.hpp"
 
 MbedTrace::MbedTrace() : MbedTrace(stdout){}
 MbedTrace::MbedTrace(FILE *stream) 
