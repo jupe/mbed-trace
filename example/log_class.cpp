@@ -6,6 +6,7 @@
 int main(int argc, char *argv[])
 {
     MbedTrace tr;
+    tr >> stdout;
     tr << "test: " << 10 << "\n";
     tr_debug("Hellou");
     tr_info("Hellou");

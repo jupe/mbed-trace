@@ -4,15 +4,28 @@
 #include "../mbed-trace/mbed_trace.h"
 #include "../mbed-trace/mbed_trace.hpp"
 
-MbedTrace::MbedTrace() 
+MbedTrace::MbedTrace() : MbedTrace(stdout){}
+MbedTrace::MbedTrace(FILE *stream) 
 {
     this->_trace = mbed_trace_init(NULL);
+    this->stream_set(stream);
     // mbed_trace_filter_set(this->_trace, this->trace_filter);
 }
 
 int8_t MbedTrace::trace_filter(trace_t *self, int8_t dlevel, const char* group)
 {
     return 1;
+}
+
+FILE* MbedTrace::stream_get()
+{
+    return this->_trace->stream;
+}
+
+MbedTrace& MbedTrace::stream_set(FILE* stream)
+{
+    mbed_trace_set_pipe(this->_trace, stream);
+    return *this;
 }
 
 MbedTrace::~MbedTrace() 
@@ -69,7 +82,11 @@ MbedTrace& MbedTrace::level(int level)
     mbed_trace_config_set(this->_trace, cfg);
     return *this;
 }
-
+MbedTrace& MbedTrace::operator>>(FILE* stream)
+{
+    this->stream_set(stream);
+    return *this;
+}
 MbedTrace& MbedTrace::operator<<(char const* str)
 {
     mbed_tracef(this->_trace, TRACE_LEVEL_DEBUG, TRACE_GROUP, "%s", str);

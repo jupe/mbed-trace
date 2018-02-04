@@ -42,3 +42,4 @@ output/*
 .yotta.json
 .vscode
 *.log
+binarizer/__pycache__
