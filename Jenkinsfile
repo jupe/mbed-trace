@@ -82,7 +82,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
         stage ("build:${buildName}") {
           try{
             execute("mbed --version")
-            execute("echo https://github.com/armmbed/mbed-os/#62f8b922b420626514fd4690107aff4188469833 > mbed-os.lib")
+            execute("echo https://github.com/armmbed/mbed-os/#6a0a86538c0b9b2bfcc4583b1e2b7fea8f4e71e9 > mbed-os.lib")
             execute("mbed deploy")
             execute("rm -rf ./mbed-os/features/frameworks/mbed-trace")
             execute("mbed compile -m ${target} -t ${toolchain} --library")
@@ -93,18 +93,20 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
             throw err
           }
         }
-        /*stage("build:example:${buildName}") {
+        stage("build:example:${buildName}") {
           execute("mkdir ../example-mbed-os-5 || true")
           execute("cp -R example/mbed-os-5 ../example-mbed-os-5")
           dir("../example-mbed-os-5") {
             def exampleName = "example-${buildName}"
             setBuildStatus('PENDING', "build ${exampleName}", 'build starts')
             try {
-              execute("echo \"https://github.com/ARMmbed/mbed-os/#62f8b922b420626514fd4690107aff4188469833\" > mbed-os.lib")
+              execute("echo \"https://github.com/ARMmbed/mbed-os/#6a0a86538c0b9b2bfcc4583b1e2b7fea8f4e71e9\" > mbed-os.lib")
               execute("echo \"https://github.com/ARMmbed/mbed-trace#${env.GIT_COMMIT_HASH}\" > mbed-trace.lib")
               execute("mbed new .")
               execute("mbed deploy")
               execute("rm -rf ./mbed-os/features/frameworks/mbed-trace")
+              execute("rm -rf ./mbed-trace/example")
+              execute("rm -rf ./mbed-trace/test")
               execute("mbed compile -t ${toolchain} -m ${target}")
               setBuildStatus('SUCCESS', "build ${exampleName}", "build done")
             } catch(err) {
@@ -117,7 +119,7 @@ def morpheusBuildStep(target, compilerLabel, toolchain) {
               step([$class: 'WsCleanup'])
             }
           }
-        }*/
+        }
       }
     }
   }
@@ -211,7 +213,7 @@ def postBuild(buildName, isTest) {
     execute("mkdir -p output/${buildName}")
     execute("find . -name 'libmbed-trace.a' -exec mv {} 'output/${buildName}' \\;")
     execute("find . -name 'mbed-trace.ar' -exec mv {} 'output/${buildName}' \\;")
-    execute("find . -name 'mbed-os-5.bin' -exec mv {} 'output/${buildName}/mbed-os-5-example.bin' \\;")
+    execute("find ../example-mbed-os-5 -name 'example-mbed-os-5.bin' -exec mv {} 'output/${buildName}/example-mbed-os-5.bin' \\; || true")
     // Archive artifacts
     step([
       $class: 'ArtifactArchiver',
