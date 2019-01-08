@@ -28,7 +28,7 @@ def yottaTargets = [
   "frdm-k64f-armcc": "armcc",
   "nrf51dk-gcc": "gcc",
   "stm32f429i-disco-gcc": "gcc",
-  "x86-linux-native": "linux"
+  "x86-linux-native": "linux && astyle"
 ]
 
 // Initial maps for parallel build steps
@@ -158,11 +158,10 @@ def yottaBuildStep(target, compilerLabel) {
               execute("gcovr -x -o junit.xml")
               execute("cppcheck --enable=all --std=c99 --inline-suppr --template=\"{file},{line},{severity},{id},{message}\" source 2> cppcheck.txt")
 
-              // Waiting for IOTTESTINF-4864
               // check if astyle is correct
-              // execute("astyle source/*.c mbed-trace/*.h --project=.astylerc")
+              execute("astyle --options=.astylerc source/*.c mbed-trace/*.h")
               // check differency
-              // execute("git diff-index --quiet HEAD")
+              execute("git diff-index -p --exit-code HEAD")
 
               setBuildStatus('SUCCESS', "test ${buildName}", "test done")
             } catch(err) {
