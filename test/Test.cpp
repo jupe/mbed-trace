@@ -71,7 +71,6 @@ class trace : public testing::Test
     }
 };
 
-/* Unity test code starts */
 TEST_F(trace, MutexNotSet)
 {
     mbed_trace_mutex_wait_function_set(0);
