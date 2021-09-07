@@ -25,11 +25,21 @@ if (enable_coverage_data)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif ()
 
-add_executable(trace_test
+add_executable(trace_test EXCLUDE_FROM_ALL
     source/mbed_trace.c
     test/stubs/ip6tos_stub.c
     test/Test.cpp
 )
+
+# make check, this must be after add_executable!
+add_test(trace_test trace_test)
+if (TARGET check)
+    add_dependencies(check trace_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS trace_test)
+endif()
+
 target_include_directories(trace_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
 target_include_directories(trace_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/)
 target_include_directories(trace_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/test/stubs)
