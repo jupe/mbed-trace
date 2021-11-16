@@ -9,7 +9,8 @@ include(repositories.cmake)
 
 add_library(mbedTrace STATIC)
 add_library(mbedTraceInterface INTERFACE)
-target_include_directories(mbedTraceInterface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace)
+target_include_directories(mbedTraceInterface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/)
+target_include_directories(mbedTraceInterface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mbed-trace/)
 
 target_sources(mbedTrace PRIVATE source/mbed_trace.c)
 
