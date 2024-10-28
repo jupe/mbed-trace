@@ -98,7 +98,7 @@
 #ifdef MBED_TRACE_CONFIG
 #define DEFAULT_TRACE_CONFIG              MBED_TRACE_CONFIG
 #else
-#define DEFAULT_TRACE_CONFIG              TRACE_MODE_COLOR | TRACE_ACTIVE_LEVEL_ALL | TRACE_CARRIAGE_RETURN
+#define DEFAULT_TRACE_CONFIG              TRACE_ACTIVE_LEVEL_ALL | TRACE_CARRIAGE_RETURN
 #endif
 
 /** default print function, just redirect str to printf */
